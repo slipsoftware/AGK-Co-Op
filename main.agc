@@ -1,24 +1,27 @@
 
 // Project: AGK Coop 
-// Created: 24-11-28
+#include "core.agc"
+#include "networking.agc"
+`#include "api.agc"
+`#include "Gui_keybinds.agc"
+`#include "shaders.agc"
+#option_explicit
 
-// show all errors
-
-SetErrorMode(2)
-
-// set window properties
-SetWindowTitle( "AGK Coop" )
-SetWindowSize( 1024, 768, 0 )
-SetWindowAllowResize( 1 ) // allow the user to resize the window
-
-// set display properties
+SetErrorMode(2):SetWindowTitle( "AGK Coop" ):SetWindowSize(1920,1080,0):setWindowAllowResize( 1 ) 
 SetVirtualResolution( 1024, 768 ) // doesn't have to match the window
 SetOrientationAllowed( 1, 1, 1, 1 ) // allow both portrait and landscape on mobile devices
 SetSyncRate( 30, 0 ) // 30fps instead of 60 to save battery
-SetScissor( 0,0,0,0 ) // use the maximum available screen space, no black borders
-UseNewDefaultFonts( 1 )
+SetScissor( 0,0,0,0 ):UseNewDefaultFonts( 1 )
+
+
+
+
 
 do
-    Print( ScreenFPS() )
+	// example
+	//Run_Game() //ref:from source filename
+    //Run_Network()
+    //Run_Api()
+    //custom_sync()
     Sync()
 loop
