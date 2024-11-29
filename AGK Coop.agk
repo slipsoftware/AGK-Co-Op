@@ -50,13 +50,13 @@ output_path=
 
 [projectfiles]
 FILE_0=main.agc;-1
-FILE_1=core.agc;-1
-FILE_2=networking.agc;-1
+FILE_1=src%2Fcore.agc;-1
+FILE_2=src%2Fnetworking.agc;-1
 
 [files]
-FILE_NAME_0=0;main.agc;3;0
-FILE_NAME_1=0;core.agc;0;1
-FILE_NAME_2=1;networking.agc;0;2
+FILE_NAME_0=0;main.agc;16;0
+FILE_NAME_1=0;src%2Fcore.agc;0;1
+FILE_NAME_2=1;src%2Fnetworking.agc;0;2
 
 [watchvariables]
 

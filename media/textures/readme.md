@@ -1,0 +1,1 @@
+please limit all textures for  game items to 2048x2048, try to use power of 2 dimentions
