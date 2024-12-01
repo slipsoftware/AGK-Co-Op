@@ -164,3 +164,17 @@ function Core_Sign(value#)
     result=((value#>0)*2)-1
 endfunction result
 
+function Core_FileLoad(Filename$)
+	if GetFileExists(Filename$)
+		MemblockID=CreateMemblockFromFile(Filename$)
+		String$=GetMemblockString(MemblockID,0,GetMemblockSize(MemblockID))
+		DeleteMemblock(MemblockID)
+	endif
+endfunction String$
+
+function Core_FileSave(String$,Filename$)
+    FileID=OpenToWrite(Filename$) 
+    WriteString(FileID,String$)
+    CloseFile(FileID)
+endfunction
+
