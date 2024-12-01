@@ -1,7 +1,7 @@
 
 // Project: AGK Coop 
-#include "core.agc"
-#include "networking.agc"
+#include "src/core.agc"
+#include "src/networking.agc"
 `#include "api.agc"
 `#include "Gui_keybinds.agc"
 `#include "shaders.agc"
