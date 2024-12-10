@@ -1,6 +1,12 @@
 // File: core.agc
 // Created: 24-11-28
 
+
+function Clamp(value#, min#, max#)
+    if value# < min# then value# = min#
+    if value# > max# then value# = max#
+endfunction value#
+remstart
 type ObjectType
 	ID as integer
 	kind as string
@@ -34,7 +40,7 @@ type TextureType
 	Name as String
 	Path as string
 endtype
-
+remend
 type Vec3
 	X as float
 	Y as float
@@ -78,6 +84,7 @@ function Core_GetPointer3D(pointer as Core_Vec2Data)
 endfunction pointer3D
 
 function Core_GetAngleBetween(start as Core_Vec2Data, stop as Core_Vec2Data)
+	local angle# as float
 	dist as Core_Vec2Data
 	dist.X#=stop.X#-start.X#
 	dist.Y#=stop.Y#-start.Y#
@@ -92,13 +99,14 @@ function Core_CurveValue(current# as float, destination# as float, speed# as flo
 endfunction current#
  
 function Core_CurveAngle(current# as float, destination# as float, speed# as float)
+
     local diff# as float
     if speed#<1.0 then speed#=1.0
     destination#=Core_WrapAngle(destination#)
     current#=Core_WrapAngle(current#)
     diff#=destination#-current#
     if diff#<-180.0 then diff#=(destination#+360.0)-current#
-    if diff#>180.0 then diff#= estination#-(current#+360.0)
+    if diff#>180.0 then diff#= destination#-(current#+360.0)
     current#=current#+(diff#/speed#)
     current#=Core_WrapAngle(current#)
 endfunction current#
@@ -112,18 +120,30 @@ function Core_WrapAngle(angle# as float)
 endfunction angle#
  
 function Core_ManhattanDistance2D(startX,startY,endX,endY)
+	local distx as integer
+	local disty as integer
+	local distz as integer
+	local dist as integer
     distX=abs(endX-startX)
     distY=abs(endY-startY)
     dist=distX+distY
 endfunction dist
  
 function Core_Distance2D(startX#,startY#,endX#,endY#)
+	local distx# as float
+	local disty# as float
+	local distz# as float
+	local dist# as float
     distX#=endX#-startX#
     distY#=endY#-startY#
     dist#=sqrt(distX#*distX#+distY#*distY#)
 endfunction dist#
  
 function Core_Distance3D(startX#,startY#,startZ#,endX#,endY#,endZ#)
+	local distx# as float
+	local disty# as float
+	local distz# as float
+	local dist# as float
     distX#=endX#-startX#
     distY#=endY#-startY#
     distZ#=endZ#-startZ#
@@ -137,6 +157,8 @@ function Core_InverseLerp(value#,start#,end#)
 endfunction (value#-start#)/(end#-start#)
  
 function Core_Map(value#,inMin#,inMax#,outMin#,outMax#)
+	local time# as float
+	local result# as float
     time#=Core_InverseLerp(value#,inMin#,inMax#)
     result#=Core_Lerp(time#,outMin#,outMax#)
 endfunction result#
@@ -155,16 +177,20 @@ function Core_Min(valueA#,valueB#)
 endfunction valueA#
 
 function Core_Wrap(value#,min#,max#)
+	local range# as float
 	range#=max#-min#
-	if value#>max# then value#=value#-range#
-	if value#<min# then value#=value#+range#
+	if value#> max# then value#=value#-range#
+	if value#< min# then value#=value#+range#
 endfunction value#
  
 function Core_Sign(value#)
+	local result as integer
     result=((value#>0)*2)-1
 endfunction result
 
 function Core_FileLoad(Filename$)
+	local string$ as string
+	local memblockId as integer
 	if GetFileExists(Filename$)
 		MemblockID=CreateMemblockFromFile(Filename$)
 		String$=GetMemblockString(MemblockID,0,GetMemblockSize(MemblockID))
@@ -173,6 +199,7 @@ function Core_FileLoad(Filename$)
 endfunction String$
 
 function Core_FileSave(String$,Filename$)
+	local FileID as integer
     FileID=OpenToWrite(Filename$) 
     WriteString(FileID,String$)
     CloseFile(FileID)
