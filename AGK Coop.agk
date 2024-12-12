@@ -49,6 +49,7 @@ dynamic_memory=0
 output_path=
 
 [projectfiles]
+<<<<<<< Updated upstream:AGK Coop.agk
 FILE_0=src%2Fcore.agc;-1
 FILE_1=main.agc;-1
 FILE_2=src%2Fnetworking.agc;-1
@@ -63,6 +64,25 @@ FILE_NAME_2=0;src%2Fnetworking.agc;0;2
 FILE_NAME_3=0;navigation.agc;0;3
 FILE_NAME_4=0;src%2FLoadObject.agc;0;4
 FILE_NAME_5=0;UserInput.agc;208;5
+=======
+FILE_0=src%2FCamera_Control.agc;-1
+FILE_1=src%2Fcore.agc;-1
+FILE_2=main.agc;-1
+FILE_3=src%2Fnetworking.agc;-1
+FILE_4=src%2Fmenu.agc;-1
+FILE_5=src%2Fgame.agc;-1
+FILE_6=src%2Finput.agc;-1
+
+[files]
+FILE_NAME_0=0;src%2FCamera_Control.agc;23;0
+FILE_NAME_1=0;src%2Fcore.agc;208;1
+FILE_NAME_2=1;main.agc;24;2
+FILE_NAME_3=0;src%2Fnetworking.agc;0;3
+FILE_NAME_4=0;src%2Fmenu.agc;56;4
+FILE_NAME_5=0;src%2Fgame.agc;24;5
+FILE_NAME_6=0;src%2Finput.agc;0;6
+>>>>>>> Stashed changes:AGK-Co-Op.agk
 
 [watchvariables]
+watch_variable=SetCameraRange;
 
