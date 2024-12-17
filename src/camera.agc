@@ -1,5 +1,5 @@
 // File: Camera.agc
-// Created: 24 - 11 - 24
+// Created: 24-11-24
 
 type CameraData
 	Position as Core_Vec3Data
