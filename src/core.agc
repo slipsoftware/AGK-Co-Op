@@ -74,7 +74,7 @@ endtype
 
 function Core_GetPointer3D(pointer as Core_Vec2Data)
 	pointer3D as Core_Vec3Data
- 	pointer3D.X#=Get3DVectorXFromScreen(pointer.X#,pointer.Y#)
+	pointer3D.X#=Get3DVectorXFromScreen(pointer.X#,pointer.Y#)
 	pointer3D.Y#=Get3DVectorYFromScreen(pointer.X#,pointer.Y#)
 	pointer3D.Z#=Get3DVectorZFromScreen(pointer.X#,pointer.Y#)
 endfunction pointer3D
@@ -95,7 +95,6 @@ function Core_CurveValue(current# as float, destination# as float, speed# as flo
 endfunction current#
  
 function Core_CurveAngle(current# as float, destination# as float, speed# as float)
-
     local diff# as float
     if speed#<1.0 then speed#=1.0
     destination#=Core_WrapAngle(destination#)
