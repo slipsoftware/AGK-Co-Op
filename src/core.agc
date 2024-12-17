@@ -200,11 +200,11 @@ function Core_FileSave(String$,Filename$)
     CloseFile(FileID)
 endfunction
 
-function Core_RequestString(String$)
+function Core_RequestString(String$,SizeX#,SizeY#)
 	local EditBoxID as integer
     EditBoxID=CreateEditBox()
-    SetEditBoxPosition(EditBoxID,25,50)
-    SetEditBoxSize(EditBoxID,50,15)
+    SetEditBoxSize(EditBoxID,SizeX#,SizeY#)
+    SetEditBoxPosition(EditBoxID,GetVirtualWidth()/2-SizeX#/2,GetVirtualHeight()/2)
     FixEditBoxToScreen(EditBoxID,1)
     SetEditBoxDepth(EditBoxID,1)
     SetEditBoxFocus(EditBoxID,1)
