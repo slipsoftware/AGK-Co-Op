@@ -1,5 +1,5 @@
 // File: Core.agc
-// Created: 24 - 11 - 28
+// Created: 24-11-28
 
 remstart
 type ObjectType
@@ -100,14 +100,14 @@ function Core_CurveAngle(current# as float,  destination# as float,  speed# as f
     destination# = Core_WrapAngle(destination#)
     current# = Core_WrapAngle(current#)
     diff# = destination# - current#
-    if diff#< - 180.0 then diff# = (destination# + 360.0) - current#
+    if diff#< -180.0 then diff# = (destination# + 360.0) - current#
     if diff#>180.0 then diff# =  destination# - (current# + 360.0)
     current# = current# + (diff#/speed#)
     current# = Core_WrapAngle(current#)
 endfunction current#
 
 function Core_WrapAngle(angle# as float)
-    if angle# = >0
+    if angle#  => 0
         angle# = fmod(angle#, 360.0)
     else
         angle# = 360.0 + fmod(angle#,  - 360.0)
@@ -180,7 +180,7 @@ endfunction value#
  
 function Core_Sign(value#)
 	local result as integer
-    result = ((value#>0) * 2) - 1
+    result = ((value#>0) * 2) -1
 endfunction result
 
 function Core_FileLoad(Filename$)
@@ -195,7 +195,7 @@ endfunction String$
 
 function Core_FileSave(String$, Filename$)
 	local FileID as integer
-    FileID = OpenToWrite(Filename$) 
+    FileID = OpenToWrite(Filename$)
     WriteString(FileID, String$)
     CloseFile(FileID)
 endfunction

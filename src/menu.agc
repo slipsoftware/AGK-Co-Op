@@ -1,5 +1,5 @@
 // File: MKenu.agc
-// Created: 21 - 03 - 15
+// Created: 21-03-15
 
 #constant STATE_EXIT					 -1
 #constant STATE_MAIN_MENU				0

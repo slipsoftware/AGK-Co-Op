@@ -8,8 +8,6 @@ function runImport()
 	global path as string
 	global light as lighttype []
 	
-	
-	
 	path="raw:"+getreadpath()+"media/"
 	FileDiscovery("textures")
 	loadLevel()

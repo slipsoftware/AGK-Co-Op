@@ -1,5 +1,5 @@
 // File: Game.agc
-// Created: 24 - 12 - 12
+// Created: 24-12-12
 
 global Game_isHost as integer
 
@@ -112,7 +112,7 @@ endfunction
 function Game_UpdateAllPlayers()
 	local ClientID as integer
 	for ClientID = 0 to Client.length
-		if Client[ClientID].Life< = 0
+		if Client[ClientID].Life <= 0
 			Client[ClientID].Pos = Game_GetSpawnPoint()
 			Client[ClientID].OldPos = Client[ClientID].Pos
 			Client[ClientID].Life = 100

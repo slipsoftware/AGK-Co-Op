@@ -1,5 +1,5 @@
 // File: Network.agc
-// Created: 24 - 11 - 28
+// Created: 24-11-28
 
 #constant MP_MasterServerUrl$	"OurMasterServer"
 
@@ -114,7 +114,7 @@ function MP_CreateHost(GameName$, PlayerName$, ReceivePort, TransmitPort, LocalI
 	
 	Spawn = Game_GetSpawnPoint()
 	
-	Client.length =  - 1
+	Client.length =  -1
 	MP.MyNetID = GetNetworkMyClientID(MP.TCP.NetworkID)
 	ClientID = MP_AddPlayer(MP.HostNetID, LocalIP$, ReceivePort, Spawn.X#, Spawn.Y#, Spawn.Z#)
 	SetNetworkClientUserData(MP.TCP.NetworkID, MP.MyNetID, 0, 1)
@@ -193,7 +193,7 @@ function MP_ClientWaitForServerAnswer()
 	local PosZ# as float
 	local ClientID as integer
 	
-	Client.length =  - 1
+	Client.length =  -1
 	
 	repeat
 		MessageID = GetNetworkMessage(MP.TCP.NetworkID)
@@ -221,7 +221,7 @@ function MP_ClientWaitForServerAnswer()
 endfunction Client[MP.MyClientID].ReceivePort
 
 function MP_FindFreePortForNetwork(IP$)
-    local UsedPorts as integer[ - 1]
+    local UsedPorts as integer[ -1]
     local FreePort as integer
     local ID as integer
     local ClientID as integer
@@ -262,7 +262,7 @@ endfunction
 function MP_GetClientIDFromNetID(NetID as integer)
 	local ClientID as integer
 	ClientID = Client.find(NetID)
-	if ClientID =  - 1 then ClientID = Client.length
+	if ClientID =  -1 then ClientID = Client.length
 	if ClientID<0 then ClientID = 0
 endfunction ClientID
 
@@ -337,7 +337,7 @@ function MP_HostReceiveTCP()
 					AddNetworkMessageByte(MessageID, NetID)
 					SendNetworkMessage(MP.TCP.NetworkID, 0, MessageID)
 					
-					if GetNetworkNumClients(MP.TCP.NetworkID)< = MP.MaxClients then SetNetworkAllowClients(MP.TCP.NetworkID)
+					if GetNetworkNumClients(MP.TCP.NetworkID) <= MP.MaxClients then SetNetworkAllowClients(MP.TCP.NetworkID)
 					SetNetworkClientUserData(MP.TCP.NetworkID, NetID, 0, 0)
 					
 					//update master server here
@@ -364,7 +364,7 @@ function MP_HostReceiveTCP()
 				ClientID = MP_AddPlayer(NetID, GlobalIP$, ReceivePort, Spawn.X#, Spawn.Y#, Spawn.Z#)
 				
 				//TODO: batch the existing player data in one message NET_BATCH_JOIN
-				for ID = 0 to Client.length - 1
+				for ID = 0 to Client.length -1
 					if GetNetworkClientUserData(MP.TCP.NetworkID, Client[ID].NetID, 0) = 1
 						MessageID = CreateNetworkMessage()
 						AddNetworkMessageByte(MessageID, NET_JOIN)
@@ -390,7 +390,7 @@ function MP_HostReceiveTCP()
 				AddNetworkMessageFloat(MessageID, Spawn.Z#)
 				SendNetworkMessage(MP.TCP.NetworkID, 0, MessageID)
 				
-				if GetNetworkNumClients(MP.TCP.NetworkID)> = MP.MaxClients then SetNetworkNoMoreClients(MP.TCP.NetworkID)
+				if GetNetworkNumClients(MP.TCP.NetworkID) >= MP.MaxClients then SetNetworkNoMoreClients(MP.TCP.NetworkID)
 				SetNetworkClientUserData(MP.TCP.NetworkID, NetID, 0, 1)
 				
 				//update master server here
@@ -406,7 +406,7 @@ function MP_HostReceiveTCP()
 				Client[ClientID].Angle.Z# = GetNetworkMessageFloat(MessageID)
 				DeleteNetworkMessage(MessageID)
 				
-				ProjectileID = MP_Shot( - 1, ClientID)
+				ProjectileID = MP_Shot( -1, ClientID)
 				
 				for ID = 1 to Client.length
 					MessageID = CreateNetworkMessage()
@@ -710,7 +710,7 @@ function MP_ClientReceiveTCP()
 	while MessageID<>0
 		Option = GetNetworkMessageByte(MessageID)
 		select Option
-			case NET_JOIN:				
+			case NET_JOIN:
 				NetID = GetNetworkMessageByte(MessageID)
 				IP$ = GetNetworkMessageString(MessageID)
 				ReceivePort = GetNetworkMessageInteger(MessageID)
@@ -747,7 +747,7 @@ function MP_ClientReceiveTCP()
 				
 				MP_Shot(ProjectileID,  ClientID)
 			endcase
-			case NET_MESSAGE:				
+			case NET_MESSAGE:
 				NetID = GetNetworkMessageByte(MessageID)
 				ClientID = MP_GetClientIDFromNetID(NetID)
 				Message$ = GetNetworkMessageString(MessageID)
@@ -937,7 +937,7 @@ function MP_ClientDisconnect()
 	
 	CloseNetwork(MP.TCP.NetworkID)
 	DeleteUDPListener(MP.UDP.NetworkID)
-	Client.length =  - 1
+	Client.length =  -1
 endfunction
 
 // #########################################################
@@ -961,7 +961,7 @@ function MP_RemoveAllMessages()
 	for MessageID = 0 to Messages.length
 		DeleteText(Messages[MessageID].TextID)
 	next MessageID
-	Messages.length =  - 1
+	Messages.length =  -1
 endfunction
 
 function MP_MessagesUpdate(MaxMessages)
@@ -982,7 +982,7 @@ function MP_MessagesUpdate(MaxMessages)
 	next MessageID
 	
 	if MinMessageID>0
-		HideMessageID = Core_Max(MinMessageID - 1, 0)
+		HideMessageID = Core_Max(MinMessageID -1, 0)
 		if GetTextExists(Messages[HideMessageID].TextID) then SetTextVisible(Messages[HideMessageID].TextID, 0)
 	endif
 endfunction
@@ -1071,7 +1071,7 @@ function MP_Info()
 	NetID = GetNetworkFirstClient(MP.TCP.NetworkID)
 	while NetID<>0
 		ClientID = MP_GetClientIDFromNetID(NetID)
-		if ClientID> = 0 and ClientID< = Client.length
+		if ClientID >= 0 and ClientID <= Client.length
 			Text$ = "Name: " + Client[ClientID].Name$ + chr(10)
 			Text$ = Text$ + "ClientID: " + str(ClientID) + chr(10)
 			Text$ = Text$ + "NetID: " + str(NetID) + " | " + str(Client[ClientID].NetID) + chr(10)
@@ -1100,7 +1100,7 @@ function MP_DeleteInfo()
 	NetID = GetNetworkFirstClient(MP.TCP.NetworkID)
 	while NetID<>0
 		ClientID = MP_GetClientIDFromNetID(NetID)
-		if ClientID> = 0 and ClientID< = Client.length
+		if ClientID >= 0 and ClientID <= Client.length
 			if GetTextExists(Client[ClientID].TextID)
 				SetTextString(Client[ClientID].TextID, Client[ClientID].Name$)
 				SetTextColor(Client[ClientID].TextID, 255, 255, 255, 128)
