@@ -36,6 +36,7 @@ type TextureType
 	Path as string
 endtype
 remend
+
 type Vec3
 	X as float
 	Y as float

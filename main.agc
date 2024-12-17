@@ -15,23 +15,22 @@ SetAmbientColor(155,155,155)
 SetCameraRange(1,1,1000)
 SetClearColor(23,64,128)
 
-
-#include "src/core.agc"
-#include "src/networking.agc"
-`#include "src/navigation.agc"
-`#include "src/api.agc"
-`#include "src/Gui_keybinds.agc"
-`#include "src/shaders.agc"
-`#include "src/LoadObject.agc"
-#include "src/camera.agc"
-#include "src/input.agc"
-//~#include "src/import.agc"
-#include "src/menu.agc"
-#include "src/game.agc"
+// #include "src/navigation.agc"
+// #include "src/api.agc"
+// #include "src/Gui_keybinds.agc"
+// #include "src/shaders.agc"
+// #include "src/LoadObject.agc"
+// #include "src/import.agc"
+#include "src/Core.agc"
+#include "src/Network.agc"
+#include "src/Camera.agc"
+#include "src/Input.agc"
+#include "src/Menu.agc"
+#include "src/Game.agc"
 
 
 //Init variables
-//~runImport()
+// runImport()
 
 Menu_Init()
 end
