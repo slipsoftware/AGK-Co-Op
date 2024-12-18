@@ -1,13 +1,18 @@
 
 
 function runImport()
+	global spec as integer
+	spec=LoadShader("/media/shaders/specular/spec.vs","/media/shaders/specular/spec.ps")
 	global obj as objectType[]
     global LoadedImages as loadedimagestype []
     global Dir as dirtype []
     global TempDir as dirtype
 	global path as string
 	global light as lighttype []
-	
+	global ImportScale as float
+	ImportScale=1
+	GLOBAL importOffset as float
+	importOffset=512
 	
 	
 	path="raw:"+getreadpath()+"media/"
@@ -64,10 +69,16 @@ function loadLevel()
 	local data$ as string
 	local read as integer
 	setfolder("")
-	read=OpenToRead("\media\scene\import.lls")
+	read=OpenToRead("\import.lls")
 	setfolder("\media\objects")
-	while FileEOF(read) = 0
+	local eof as integer
+	eof=-1
+	while FileEOF(read) = 0 
 		data$=readline(read)
+		`if data$="//END" 
+			` exitfunction
+			`endif
+		
 		num=countstringtokens(data$,":")
 		if num>0
 			if GetStringToken(data$,":",1)="Type"
@@ -99,7 +110,9 @@ function loadobj(read)
 	objid=obj.length
 	data$=readline(read)
 	obj[objid].name=getstringtoken(data$,":",2)
-	obj[objid].id=loadobject(obj[objid].name+".fbx")
+	obj[objid].id=LoadObject(obj[objid].name+".fbx")
+	global reflect as integer[]
+	reflect.insert(obj[objid].id)
 	setobjectscale(obj[objid].id,0.002,.002,.002)
 	SetObjectCullMode(obj[objid].id,0)
 	SetObjectCastShadow(obj[objid].id,1)
@@ -108,13 +121,18 @@ function loadobj(read)
 	data$=readline(read):obj[objid].rot.x=val(getstringtoken2(data$,":",2))
 	data$=readline(read):obj[objid].rot.y=val(getstringtoken2(data$,":",2))
 	data$=readline(read):obj[objid].rot.z=val(getstringtoken2(data$,":",2))
+	local scale# as float
+	scale#=10
+	
 	data$=readline(read)
 	data$=readline(read):obj[objid].pos.x=val(getstringtoken2(data$,":",2))
 	data$=readline(read):obj[objid].pos.y=val(getstringtoken2(data$,":",2))
 	data$=readline(read):obj[objid].pos.z=val(getstringtoken2(data$,":",2))
+	SetObjectPosition(obj[objid].id,obj[objid].pos.x*scale#,obj[objid].pos.y*scale#,obj[objid].pos.z*scale#)
+	setobjectscale(obj[objid].id,1,1,1)
 	
 mesh=0
-	for i = 0 to 10
+	for i = 0 to 30
 		if data$="//END" then exitfunction
 		data$=readline(read)
 		if data$="//Material Color RGB"
@@ -125,6 +143,9 @@ mesh=0
 			b=val(GetStringToken(data$,":",1))
 			data$=readline(read)
 		endif
+		
+		
+		
 		
 			if GetStringToken(data$,":",1)="Texture"
 				 name$=GetStringToken(data$,":",2)
@@ -139,16 +160,40 @@ mesh=0
 				 if load2 < 1
 				 	  textid=LoadImages(name$)
 				  endif
+				  SetShaderConstantByName(spec,"WaterAlpha", 0.6, 0.0, 0.0, 0.0)
+				  SetShaderConstantByName(spec, "GlassSpecularBoost", 16.0, 0.0, 0.0, 0.0) // 2x specularity
+					SetShaderConstantByName(spec, "DiffuseBrightness", 1.2, 0.0, 0.0, 0.0) // Half brightness
 
+	
 				 if load2 < 1
 				 	inc mesh,1
 				 	obj[objid].textid.insert(textid)
 					if GetObjectNumMeshes(obj[objid].id) < 1 
 						 `setobjectimage(obj[objid].id,textid,0)
 					else
+						local glass as integer
+						local tobj as integer
+						local cnums as integer
 						if mesh <=GetObjectNumMeshes(obj[objid].id) 
+							SetObjectReceiveShadow(obj[objid].id,1)
+							SetObjectcastShadow(obj[objid].id,1)
+							if name$="color#glass.png" 
+							setObjectTransparency(obj[objid].id,1)
+					 	 	endif
+						
 					 	 	SetObjectmeshImage(obj[objid].id,mesh,textid,0)
+					 	 	SetObjectmeshImage(obj[objid].id,mesh,textid,1)
+					 	 	SetObjectMeshShader(obj[objid].id,mesh,spec)
+					 	 	SetObjectMeshNormalMap(obj[objid].id,mesh,textid)
+					 	 	`SetObjectTransparency(obj[objid].id,1)
 					 	 	obj[objid].meshtexture.primary.insert(textid)
+							`endif
+
+						
+
+
+					 	 	
+					 	 	
 					 	endif
 					endif
 				endif
@@ -213,6 +258,7 @@ function loadlamp(read as integer)
 	data$=readline(read):ry#=val(getstringtoken2(data$,":",2))
 	data$=readline(read):rz#=val(getstringtoken2(data$,":",2))
 	readline(read)//pos
+	
 	data$=readline(read):px#=val(getstringtoken2(data$,":",2))
 	data$=readline(read):py#=val(getstringtoken2(data$,":",2))
 	data$=readline(read):pz#=val(getstringtoken2(data$,":",2))
@@ -285,7 +331,12 @@ function MousemoveY()
  endfunction dy#
 remstart
 function TextureObjects()
-	SetObjectUVScale (object[i].id,1,1,1)
+	local found as integer
+	local parent as integer
+	local image1 as integer
+	local image2 as integer
+	 
+	SetObjectUVScale (obj[i].id,1,1,1)
 	setimagewrapu (Loadedimages[find].Imageid,1)
 	setimagewrapv (Loadedimages[find].Imageid,1)
 	if  found <=GetObjectNumMeshes(object[i].id)
@@ -358,25 +409,27 @@ function LoadImages(FileName$)
 	local directory as integer
 	local image as integer
 	local images as integer
+	found=0
 	//loadimage into global image array dont load twice
 	for i=0 to LoadedImages.length 
 		
 		if len(Loadedimages[i].ImageName)>-1
 			if Loadedimages[i].imagename =Filename$
 				found=i
+				exit
 			endif
 		endif
 	next
 	
 	`end
 	`load image if not found
-	if found=0
+	if found =0
 		if len(filename$)>1
 			for directory=0 to dir.length 
 				for image=0 to dir[directory].ImageName.length
 					if dir[directory].ImageName[image]=filename$
 						setfolder("/media")
-						setfolder("Textures")
+						setfolder("Textures/")
 						setfolder(dir[directory].DirName)
 						images=loadimage(filename$)
 						t as loadedimagestype
@@ -384,6 +437,7 @@ function LoadImages(FileName$)
 						t.imageid=images
 						loadedimages.insert(t)
 						found=LoadedImages.length
+						exitfunction images
 					endif
 				next
 			next
@@ -391,8 +445,11 @@ function LoadImages(FileName$)
 		else 
 			images=loadedimages[found].ImageID
 	endif
-	
-	
+	`print(filename$)
+	`print(images)
+	`print(loadedimages[found].ImageName)
+	`sync()
+	`sleep(2000)
 
 Endfunction images
 

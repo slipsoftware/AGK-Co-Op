@@ -1,0 +1,62 @@
+uniform vec3 agk_CameraPos;        // Camera position
+uniform vec3 LightDirection;       // Light direction
+uniform vec3 LightColor;           // Light color
+uniform vec3 AmbientColor;         // Ambient light color
+uniform float WaterAlpha;          // Alpha/transparency multiplier for glass
+uniform float GlassSpecularBoost;  // Specular intensity multiplier for glass
+uniform float DiffuseBrightness;   // Brightness multiplier for diffuse
+uniform sampler2D texture0;        // Shared texture for diffuse and normal
+
+// Input from Vertex Shader
+varying vec4 Vs_Tex;
+varying vec3 Vs_TBNRow1;
+varying vec3 Vs_TBNRow2;
+varying vec3 Vs_TBNRow3;
+varying vec3 Vs_WorldPos;
+
+void main() 
+{
+    // View vector (from surface to camera)
+    vec3 ViewVec = normalize(agk_CameraPos - Vs_WorldPos);
+
+    // Tangent-Bitangent-Normal matrix
+    mat3 WorldTBN = mat3(Vs_TBNRow1, Vs_TBNRow2, Vs_TBNRow3);
+
+    // Sample the texture
+    vec3 TextureColor = texture2D(texture0, Vs_Tex.xy).rgb;
+
+    // Convert texture to normal map
+    vec3 NormalMap = TextureColor * 2.0 - 1.0; // Scale texture to [-1, 1]
+    vec3 Normals = normalize(WorldTBN * NormalMap); // Transform normals to world space
+
+    // Adjust diffuse brightness
+    vec3 DiffuseColor = TextureColor * DiffuseBrightness; // Scale brightness of diffuse color
+
+    // Diffuse lighting
+    float Diffuse = max(dot(Normals, normalize(-LightDirection)), 0.0);
+
+    // Specular lighting
+    vec3 HalfVec = normalize(-LightDirection + ViewVec);
+    float Specular = pow(max(dot(HalfVec, Normals), 0.0), 32.0);
+
+    // Transparency control
+    float TextureAlpha = texture2D(texture0, Vs_Tex.xy).a; // Optional alpha from texture
+    float FinalAlpha = (TextureAlpha < 0.9) ? WaterAlpha : 1.0;
+
+    if (FinalAlpha < 0.01) discard; // Ignore fully transparent areas
+
+    // Boost specular for glass objects
+    float SpecularBoost = (FinalAlpha < 1.0) ? GlassSpecularBoost : 1.0;
+
+    // Combine lighting
+    vec3 Ambient = AmbientColor * DiffuseColor;
+    vec3 DiffuseLight = LightColor * Diffuse * DiffuseColor;
+    vec3 SpecularLight = LightColor * Specular * SpecularBoost;
+
+    // Final color composition
+    vec3 BaseColor = Ambient + DiffuseLight;
+    vec3 FinalColor = BaseColor + SpecularLight;
+
+    // Output the color with selective transparency
+    gl_FragColor = vec4(FinalColor, FinalAlpha);
+}

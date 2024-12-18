@@ -1,7 +1,7 @@
 // File: Camera_Control.agc
 // Created: 24-11-24
 function load_Camera()
-	cam.speed = 55.0       // Movement speed
+	cam.speed = 155.0       // Movement speed
 	cam.sensitivity = 0.2 // Mouse sensitivity
 	cam.angleX = 0.0      // Rotation around the X-axis (up/down)
 	cam.angleY = 0.0      // Rotation around the Y-axis (left/right)
@@ -51,11 +51,11 @@ function Camera()
 
     // Update camera rotation directly on the X and Y axes
     SetCameraRotation(1, -cam.angleX, cam.angleY, 0)
-if GetRawKeyState(16)=1
+`if GetRawKeyState(16)=1 only while shift is pressed
     // Handle movement with WASD keys
     if GetRawKeyState(87) then MoveCameraLocalZ(1,  cam.speed *  deltaTime) // W key: forward
     if GetRawKeyState(83) then MoveCameraLocalZ(1, -cam.speed *  deltaTime) // S key: backward
     if GetRawKeyState(65) then MoveCameraLocalX(1, -cam.speed *  deltaTime) // A key: strafe left
     if GetRawKeyState(68) then MoveCameraLocalX(1,  cam.speed *  deltaTime) // D key: strafe right
-endif
+`endif
 endfunction

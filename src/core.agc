@@ -1,6 +1,19 @@
 // File: core.agc
 // Created: 24-11-28
 
+type enginetype
+	shader as shadertype
+endtype
+
+type shadertype
+	water as water
+	sky as sky
+endtype
+
+type cloud
+	blue as integer
+endtype
+
 
 function Clamp(value#, min#, max#)
     if value# < min# then value# = min#

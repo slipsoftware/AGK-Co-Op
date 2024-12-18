@@ -1,0 +1,215 @@
+#define OCTAVES 8.0
+
+// Uniforms for sky, fog, sun, and stars
+uniform vec3 topColor;    // Sky color at the zenith (top)
+uniform vec3 bottomColor; // Sky color at the horizon (bottom)
+uniform vec3 fogColor;    // Fog/haze color near the horizon
+uniform vec3 sunDirection; // The direction of the sun
+uniform float fogDensity; // Controls the density of fog near the horizon
+uniform float timeOfDay;  // Time of day for sun movement
+uniform float time;
+uniform float frequency; // Frequency of the noise
+uniform float speed; // Speed of cloud movement
+uniform float size; // Size of the clouds
+uniform float density; // Density of the clouds
+uniform float densityFactor; // Additional density factor to increase density without affecting size
+uniform vec3 colorA; // Shadow color
+uniform vec3 colorB; // Base color
+uniform vec3 colorC; // Highlight color (brighter white)
+uniform vec3 colorD; // Grey color
+uniform vec2 resolution;
+uniform float starFadeFactor; // Controls star visibility based on time of day
+uniform float sunSize;        // Controls the size of the sun disk
+
+varying mediump vec2 uvVarying;
+varying highp vec3 posVarying; // World position of the fragment
+
+// Noise and FBM functions (unchanged)
+float rand2(vec2 co) {
+    return fract(cos(dot(co.xy, vec2(12.9898, 78.233))) * 4.5453);
+}
+
+float valueNoiseSimple(vec2 vl) {
+    float minStep = 1.0;
+    vec2 grid = floor(vl);
+    vec2 gridPnt1 = grid;
+    vec2 gridPnt2 = vec2(grid.x, grid.y + minStep);
+    vec2 gridPnt3 = vec2(grid.x + minStep, grid.y);
+    vec2 gridPnt4 = vec2(gridPnt3.x, gridPnt2.y);
+    float s = rand2(gridPnt1);
+    float t = rand2(gridPnt3);
+    float u = rand2(gridPnt2);
+    float v = rand2(gridPnt4);
+    float x1 = smoothstep(0.0, 1.0, fract(vl.x));
+    float interpX1 = mix(s, t, x1);
+    float interpX2 = mix(u, v, x1);
+    float y = smoothstep(0.0, 1.0, fract(vl.y));
+    float interpY = mix(interpX1, interpX2, y);
+    return interpY;
+}
+
+float fractalNoise(vec2 vl) {
+    float persistance = 2.0;
+    float amplitude = 0.5;
+    float rez = 0.0;
+    vec2 p = vl;
+    for (float i = 0.0; i < OCTAVES; i++) {
+        rez += amplitude * valueNoiseSimple(p);
+        amplitude /= persistance;
+        p *= persistance;
+    }
+    return rez;
+}
+
+float finerDetailNoise(vec2 p) {
+    float persistance = 0.5;
+    float amplitude = 0.5;
+    float rez = 0.0;
+    vec2 scale = vec2(4.0, 4.0); // Additional scaling for finer details
+    for (float i = 0.0; i < OCTAVES; i++) {
+        rez += amplitude * valueNoiseSimple(p * scale);
+        amplitude *= persistance;
+        scale *= 2.0;
+    }
+    return rez;
+}
+
+float complexFBM(vec2 p) {
+    float slow = time / 16.0;
+    float fast = time / 2.0;
+    vec2 offset1 = vec2(slow * speed, 0.0);
+    vec2 offset2 = vec2(sin(fast * speed) * 0.1, 0.0);
+    return (1.0 + 0.35) * fractalNoise(p + offset1 + fractalNoise(p + fractalNoise(p + 2.0 * fractalNoise(p - offset2))));
+}
+
+void main() {
+    // Initialize the final image color with the sky color
+    vec3 imageColor = vec3(0.0);
+
+    // Calculate UV coordinates for various effects
+    vec2 uv = uvVarying * frequency / size;
+
+    // Calculate sun direction based on timeOfDay
+    float radians = (timeOfDay / 24.0) * 2.0 * 3.14159265;
+    vec3 sunDirection = vec3(cos(radians), sin(radians), 0.0);
+    vec3 normalizedSunDirection = normalize(sunDirection);
+
+    // Adjusted sky fade factor for both sunrise and sunset
+    vec3 nightColor = vec3(0.0, 0.0, 0.1); // Dark night sky color
+    float skyFadeFactor = smoothstep(-0.9, 0.2, -sunDirection.y) * (1.0 - smoothstep(-0.9, 0.2, sunDirection.y)); // Lighten at sunrise, darken after sunset
+
+    // Calculate horizon effect and sky color blending
+    vec3 viewDir = normalize(posVarying);
+    float heightFactor = dot(viewDir, vec3(0.0, 1.0, 0.0));
+    heightFactor = clamp(heightFactor, 0.0, 1.0);
+
+    vec3 skyColor = mix(mix(bottomColor, topColor, heightFactor), nightColor, skyFadeFactor);
+
+    float sunAngle = degrees(asin(sunDirection.y));
+    float horizonEffect = smoothstep(0.0, 10.0, sunAngle) * (1.0 - smoothstep(10.0, 20.0, sunAngle));
+
+    float horizonBlend = smoothstep(0.0, 0.2, heightFactor) - smoothstep(0.2, 0.5, heightFactor / 2.4); // Adjusted for smoother transition
+    float sunsetEffect = max(dot(normalize(vec3(viewDir.x, 0.0, viewDir.z)), normalize(vec3(sunDirection.x, 0.0, sunDirection.z))), 0.0);
+
+    vec3 horizonColor = vec3(0.961, 0.61, 0.06);
+    vec3 baseSkyColorWithHorizon = mix(skyColor, horizonColor, horizonBlend * horizonEffect * sunsetEffect);
+
+    // Calculate cloud density and color
+    float cloudDensity = complexFBM(uv + time * 1.8 * speed) * density;
+    float modulation = finerDetailNoise(uv + time * 4.8 * speed);
+    cloudDensity *= (0.8 + 0.2 * modulation);
+    cloudDensity *= densityFactor;
+    cloudDensity = clamp(cloudDensity, 0.0, 0.98);
+
+    vec3 cloudColor;
+    if (cloudDensity < 0.2) {
+        cloudColor = mix(colorA, colorD, cloudDensity / 0.2);
+    } else if (cloudDensity < 0.5) {
+        cloudColor = mix(colorD, colorB, (cloudDensity - 0.2) / 0.3);
+    } else if (cloudDensity < 0.8) {
+        cloudColor = mix(colorB, colorC, (cloudDensity - 0.5) / 0.3);
+    } else {
+        float highlightDetail = finerDetailNoise(uv + time * 1.8 * speed);
+        cloudColor = mix(colorC, colorB, (cloudDensity - 0.8) / 0.2 * (1.0 - highlightDetail));
+    }
+    cloudDensity = pow(cloudDensity, 6.5);
+
+    // Gradually darken clouds at night based on the sky's darkness
+    float nightFactor = smoothstep(0.0, 0.9, skyFadeFactor); // Smooth transition for cloud darkening
+    cloudColor *= mix(1.0, 0.1, nightFactor); // Darken clouds based on nightFactor
+
+    // Combine sun disk with existing colors
+    float sunIntensity = max(dot(viewDir, normalizedSunDirection), 0.0);
+    sunIntensity = pow(sunIntensity, sunSize * 64.0) / 2.0;
+
+    vec3 sunColor = vec3(1.0, 0.9, 0.4);
+    vec3 glowColor = sunColor * sunIntensity * 2.0;
+
+    imageColor = mix(baseSkyColorWithHorizon, cloudColor, cloudDensity);
+    imageColor += glowColor;
+
+    // Inverted fog factor for fog at the bottom
+    float fogFactor = smoothstep(.45, 0.0, heightFactor); // Ensure fog is at the bottom
+
+    // Blend the sun color directly with the fog using additive blending
+    vec3 fogBaseColor = mix(vec3(2.3), nightColor, skyFadeFactor); // Fog blends to night color
+    vec3 sunFogBlend = fogBaseColor + sunColor * sunIntensity*10 * 0.5; // Additive blending of sun and fog
+
+    // Adjust fog alpha based on nightFactor
+    float fogAlpha = 0.5; // 50% transparency
+
+    // Blend the fog with the sky and apply the additive blending
+    vec3 finalFogColor = mix(skyColor, sunFogBlend, fogFactor * 0.5) * fogAlpha; // Apply blending and transparency
+
+    // Blend the fog on top of the clouds
+    imageColor = mix(imageColor, finalFogColor, fogFactor);
+
+    // Star generation and drawing
+
+    vec3 starColor = vec3(0.0);
+	if (timeOfDay > .0) {
+
+for (int i = 0; i < 300; i++) {
+    // Generate random star positions across the full UV space
+    vec2 starPos = vec2(
+        fract(sin(float(i) * 12.9898) * 43758.5453),
+        fract(sin(float(i) * 78.233) * 43758.5453)
+    );
+
+    // Ensure star positions are within the full 0-1 UV space
+    starPos = starPos*2;
+
+    // Generate star size and flicker effect
+    float starSize = mix(0.00025, 0.00005, rand2(vec2(float(i) * 56.789, float(i) * 67.890)));
+    float flicker = 0.85 + 0.15 * sin(time * 10.0 + float(i) * 10.0);
+
+    // More pronounced color variation for each star
+    vec3 starBaseColor = mix(vec3(1.0, 0.9, 0.8), vec3(0.8, 0.9, 1.0), rand2(vec2(float(i) * 78.901, float(i) * 89.012)));
+
+    // Calculate distance from current UV to star position
+    float distance = length(uvVarying - starPos);
+
+    // Generate the star using smoothstep for a soft edge
+    float star = smoothstep(starSize * 4.0, starSize, distance) * flicker;
+
+    // Mask stars with cloud density (stars hidden behind clouds)
+    star *= 1.0 - cloudDensity;
+
+    // Apply sky fade factor to make stars fade in/out with the sky
+    star *= smoothstep(0.1, 0.9, skyFadeFactor);
+
+    // Accumulate the star color
+    starColor += starBaseColor * star;
+
+}
+}
+
+
+
+
+    starColor = clamp(starColor, 0.0, 1.0);
+    imageColor += starColor;
+
+    // Output the final image color
+    gl_FragColor = vec4(imageColor, 1.0);
+}

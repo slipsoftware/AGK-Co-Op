@@ -1,22 +1,41 @@
 
 :Type:MESH:
-:Name:Cube:
+:Name:Cube.001:
 //Rotation
-:x:0.0:
-:y:0.0:
-:z:0.0:
+:x:-3.1415929794311523:
+:y:3.1415929794311523:
+:z:-1.5707958936691284:
 //Position
-:x:0.0:
-:y:0.0:
-:z:0.0:
+:x:3.675358772277832:
+:y:3.5932788848876953:
+:z:1.5282293558120728:
 //Material Color RGB
+:204:204:204:
 :Shader:Specular:Value:0.5000:
 :Entity:None:Value:0:
-:Texture:unknown.png:Material:
+:Texture:spacepk02_generic01_s.png:Material:
 //Material Color RGB
-:Shader:Emissive:Value:2.0000:
-:Entity:Sound:Value:1:
-:Texture:uig.png:Material.001:
+:204:204:204:
+:Shader:Specular:Value:0.5000:
+:Entity:None:Value:0:
+:Texture:color#glass.png:Material.001:
+//END
+
+:Type:MESH:
+:Name:Cube:
+//Rotation
+:x:-3.1415929794311523:
+:y:3.1415929794311523:
+:z:-1.5707958936691284:
+//Position
+:x:3.675358772277832:
+:y:3.5932788848876953:
+:z:1.5282293558120728:
+//Material Color RGB
+:204:204:204:
+:Shader:Specular:Value:0.5000:
+:Entity:None:Value:0:
+:Texture:color#glass.png:Material.001:
 //END
 
 :Type:LAMP:
@@ -26,9 +45,9 @@
 :y:0.055217113345861435:
 :z:1.8663908243179321:
 //Position
-:x:4.076245307922363:
-:y:1.0054539442062378:
-:z:5.903861999511719:
+:x:5.964034080505371:
+:y:8.62041187286377:
+:z:7.459531784057617:
 :255:255:255:
 29.999982833862305
 //END
@@ -40,9 +59,9 @@
 :y:0.0:
 :z:0.8149281740188599:
 //Position
-:x:7.481131553649902:
-:y:-6.5076398849487305:
-:z:5.34366512298584:
+:x:10.926791191101074:
+:y:-2.879323959350586:
+:z:4.9678144454956055:
 //END
 //scene
 :0:0:0:

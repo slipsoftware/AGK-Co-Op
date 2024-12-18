@@ -1,0 +1,100 @@
+uniform vec3 agk_CameraPos;
+vec3 ApplyFog( vec3 color, vec3 pointPos );
+uniform highp float UvScroll; 
+uniform vec3 ReflectColor;
+uniform vec3 RefractColor;
+uniform vec3 AmbientColor;
+uniform vec3 LightDirection;
+uniform vec3 LightColor;
+uniform float Heightvec;
+uniform vec3 RippleColor;
+uniform float WaterAlpha;  // Added uniform for transparency control
+uniform float Time;        // Time variable to control UV movement
+
+// Textures
+uniform sampler2D texture0; // Normal
+uniform sampler2D texture1; // Reflection
+uniform sampler2D texture2; // Refraction
+
+//--------------
+// VS In
+//--------------
+varying vec4 Vs_Tex;
+varying vec3 Vs_TBNRow1;
+varying vec3 Vs_TBNRow2;
+varying vec3 Vs_TBNRow3;
+varying vec3 Vs_WorldPos;
+varying vec4 Vs_Proj;
+varying vec3 Vs_ViewNor;
+
+//--------------
+// Ripple Effect Variables
+uniform vec2 RippleOrigin; // The origin of the ripple effect (impact point)
+uniform float RippleTime;  // The time variable to animate the ripple
+uniform float RippleIntensity; // The intensity of the ripple effect
+
+void main() 
+{
+    vec3 ViewVec = normalize(agk_CameraPos - Vs_WorldPos);
+    mat3 WorldTBN = mat3(Vs_TBNRow1, Vs_TBNRow2, Vs_TBNRow3);
+    highp vec4 NewUv = Vs_Tex;
+    highp float ripple = 0.0;
+    
+    // UV movement for texture scrolling
+    NewUv.xy += vec2(UvScroll * Time, UvScroll * Time * 0.5);  // Scroll the UVs over time
+
+    if (RippleTime > 0 && RippleTime < 6.0) {
+        // Ripple effect calculation using the adjusted ripple origin
+        highp float distanceFromOrigin = distance(NewUv.xy, RippleOrigin);
+        highp float waveFront = RippleTime * 0.5; // Slow down the outward movement of the wavefront
+
+        // Generate a single, thinner expanding wave with softer edges
+        if (distanceFromOrigin > waveFront - 0.25 && distanceFromOrigin < waveFront + 0.25) {
+            ripple = sin((distanceFromOrigin + 1 - waveFront) * 3.14159) * (RippleIntensity / (RippleTime + 0.6));
+
+            // Soften the edges and ensure the wave strength fades gradually
+            ripple *= smoothstep(0.0, 1.0, 0.5 - abs(distanceFromOrigin - waveFront) * 3.0);
+        }
+    } else {
+        ripple = 0.0;
+    }
+
+    // Apply ripple to UV coordinates
+    NewUv += (Heightvec * ((texture2D(texture0, NewUv.xy).w + texture2D(texture0, NewUv.zw).w * 0.25) - 0.625)) * normalize(Vs_ViewNor).xyxy;
+
+    // Normal map lookup with ripple effect and scrolling UVs
+    vec3 NormalMap1 = texture2D(texture0, NewUv.xy).xyz * 2.0 - 1.0;
+    vec3 NormalMap2 = texture2D(texture0, NewUv.zw).xyz * 2.0 - 1.0;
+    vec3 NormalMap = vec3(NormalMap1.xy * NormalMap2.z + NormalMap2.xy * 0.75, 0.25 + (NormalMap2.z * NormalMap1.z));
+    vec3 Normals = normalize(WorldTBN * NormalMap);
+    Normals += vec3(ripple * 0.1, ripple * 0.1, 0.0); // Apply ripple effect to normals
+
+    // Lighting and reflection/refraction calculations
+    highp float ViewNormal = max(dot(ViewVec, Normals), 0.0);
+    highp float FresnelVec = 0.4 + 0.96 * pow(1 - ViewNormal, 5.0);
+    highp vec3 HalfVec = normalize(-LightDirection + ViewVec);
+    highp float Light = max(dot(-LightDirection, Normals), 0.0);
+    highp float Specular = pow(max(dot(HalfVec, Normals), 0.0), 128.0) * Light;
+    highp vec2 projUV = Vs_Proj.xy / Vs_Proj.w;
+
+    // Apply reflection and refraction with distortion
+    projUV = vec2(projUV.x, 1.0 - projUV.y); // Flip X and Y coordinates for true reflection
+    highp float distanceAttenuation = clamp(length(ViewVec) * 0.1, 0.0, 1.0);
+    highp float verticalAttenuation = smoothstep(0.0, 0.1, projUV.y); 
+    highp float attenuationFactor = distanceAttenuation * verticalAttenuation;
+
+    highp vec2 distortionOffset = Normals.xy * 0.225 * attenuationFactor;
+    distortionOffset += NormalMap1.xy * 0.25 * attenuationFactor;
+
+    highp vec3 Refraction = pow(texture2D(texture2, projUV + distortionOffset).xyz, vec3(2.2, 2.2, 2.2)); // Refraction from texture2 (underwater)
+    highp vec3 Reflection = pow(texture2D(texture1, projUV + distortionOffset).xyz, vec3(2.2, 2.2, 2.2)); // Reflection with distortion
+
+    // Blend refraction and reflection using Fresnel
+    highp vec3 Water = mix(Refraction * RefractColor, Reflection * ReflectColor, FresnelVec);
+
+    // Apply lighting to the water color
+    Water = Water * (AmbientColor + LightColor * Light) + (LightColor * Specular);
+
+    // Final output with transparency and fog applied
+    gl_FragColor = vec4(ApplyFog(pow(Water, vec3(0.4545, 0.4545, 0.4545)), Vs_WorldPos), WaterAlpha);
+}
