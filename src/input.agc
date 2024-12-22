@@ -146,14 +146,15 @@
 #Constant KEY_TOP_9 272
 
 #constant KEYINDEX_UP			0
-#constant KEYINDEX_DOWN		1
-#constant KEYINDEX_LEFT		2
+#constant KEYINDEX_DOWN			1
+#constant KEYINDEX_LEFT			2
 #constant KEYINDEX_RIGHT		3
 #constant KEYINDEX_ACTION		4
-#constant KEYINDEX_CROUCH		5
-#constant KEYINDEX_LEANLEFT	6
-#constant KEYINDEX_LEANRIGHT	7
-#constant KEYINDEX_SHOOT		8
+#constant KEYINDEX_RELOAD		5
+#constant KEYINDEX_CROUCH		6
+#constant KEYINDEX_JUMP			7
+#constant KEYINDEX_LEANLEFT		8
+#constant KEYINDEX_LEANRIGHT	9
 
 // Input Types
 type Input_MouseData
@@ -170,7 +171,7 @@ type Input_KeyBindingData
 endtype
 
 type Input_KeyboardData
-	Key as Input_KeyBindingData[60]
+	Key as Input_KeyBindingData[]
 endtype
 
 type Input_JoystickData
@@ -187,14 +188,16 @@ type InputData
 endtype
 
 global Input as InputData
+global Input_OldKeyCode as integer
 
-function Input_Init(MouseSpeed# as float, JystickSpeed# as float, File$ as string)	
+function Input_Init(KeyIndexCount as integer, MouseSpeed# as float, JystickSpeed# as float, File$ as string)	
 	// Initialize all Input Variables
-	Input.Mouse.Speed#=MouseSpeed#*3
-	Input.Joystick.Speed#=JystickSpeed#
-	Input.Joystick.Size#=GetVirtualHeight()*0.25
-	Input.BindingsFile$="raw:"+File$
-	
+	Input.Mouse.Speed# = MouseSpeed# * 3
+	Input.Joystick.Speed# = JystickSpeed#
+	Input.Joystick.Size# = GetVirtualHeight() * 0.25
+	Input.BindingsFile$ = "raw:" + File$
+	Input.Keyboard.Key.length = KeyIndexCount
+
 	Input_SetDefaultBinding()
 endfunction
 
@@ -239,17 +242,38 @@ function Input_MouseUpdate()
 	endif
 endfunction
 
+Function Input_GetMouseCurrentPoition()
+Endfunction Input.Mouse.Current
+
+Function Input_GetMousePressedPoition()
+Endfunction Input.Mouse.Start
+
+Function Input_GetMouseReleasePoition()
+Endfunction Input.Mouse.Stop
+
+Function Input_GetMouseDrag()
+Endfunction Input.Mouse.Stop
+
 // Keyboard Handling
 function Input_SetDefaultBinding()
-	Input_SetKeyBinding(KEYINDEX_UP,		KEY_W, KEY_UP)
+	Input_SetKeyBinding(KEYINDEX_UP,	KEY_W, KEY_UP)
 	Input_SetKeyBinding(KEYINDEX_DOWN,	KEY_S, KEY_DOWN)
 	Input_SetKeyBinding(KEYINDEX_LEFT,	KEY_A, KEY_LEFT)
 	Input_SetKeyBinding(KEYINDEX_RIGHT,	KEY_D, KEY_RIGHT)
-	Input_SetKeyBinding(KEYINDEX_ACTION,	KEY_E, KEY_ENTER)
+	Input_SetKeyBinding(KEYINDEX_ACTION,KEY_E, KEY_ENTER)
+	Input_SetKeyBinding(KEYINDEX_RELOAD,KEY_R, KEY_INSERT)
 endfunction
 
 function Input_SetKeyBinding(KeyIndex,PrimaryKeyCode,SecondaryKeyCode)
 	Input.Keyboard.Key[KeyIndex].Primary=PrimaryKeyCode
+	Input.Keyboard.Key[KeyIndex].Secondary=SecondaryKeyCode
+endfunction
+
+function Input_SetPrimaryKeyBinding(KeyIndex,PrimaryKeyCode)
+	Input.Keyboard.Key[KeyIndex].Primary=PrimaryKeyCode
+endfunction
+
+function Input_SetSecondaryKeyBinding(KeyIndex,SecondaryKeyCode)
 	Input.Keyboard.Key[KeyIndex].Secondary=SecondaryKeyCode
 endfunction
 
@@ -281,26 +305,35 @@ endfunction KeyPressed
 function Input_GetKeyName(KeyCode)
 	local Result$ as string
 	select KeyCode		
-		case KEY_BACK: 		Result$="Back":			endcase
+		case KEY_BACK:		Result$="Back":			endcase
 		case KEY_TAB: 		Result$="Tab":			endcase
-		case KEY_ENTER:		Result$="Enter":			endcase
-		case KEY_SHIFT:		Result$="Shift":			endcase
+		case KEY_ENTER:		Result$="Enter":		endcase
+		case KEY_SHIFT:		Result$="Shift":		endcase
 		case KEY_CONTROL:	Result$="Ctrl":			endcase
-		case KEY_ESCAPE:		Result$="Escape":		endcase
-		case KEY_SPACE:		Result$="Space":			endcase
-		case KEY_PAGEUP:		Result$="Page Up":		endcase
-		case KEY_PAGEDOWN:	Result$="Page Down":		endcase
+		case KEY_ESCAPE:	Result$="Escape":		endcase
+		case KEY_SPACE:		Result$="Space":		endcase
+		case KEY_PAGEUP:	Result$="Page Up":		endcase
+		case KEY_PAGEDOWN:	Result$="Page Down":	endcase
 		case KEY_END:		Result$="End":			endcase
 		case KEY_HOME:		Result$="Home":			endcase
 		case KEY_LEFT:		Result$="Left":			endcase
 		case KEY_UP:		Result$="Up":			endcase
-		case KEY_RIGHT:		Result$="Right":			endcase
+		case KEY_RIGHT:		Result$="Right":		endcase
 		case KEY_DOWN:		Result$="Down":			endcase
-		case KEY_INSERT:		Result$="Insert":		endcase
-		case KEY_DELETE:		Result$="Delete":		endcase
+		case KEY_INSERT:	Result$="Insert":		endcase
+		case KEY_DELETE:	Result$="Delete":		endcase
 		case default:		Result$=Chr(KeyCode):	endcase
 	endselect
 endfunction Result$
+
+function Input_GetKeyCodeOnChange()
+	local KeyCode as integer
+	KeyCode=GetRawLastKey()
+	if KeyCode<>Input_OldKeyCode
+		Input_OldKeyCode=KeyCode
+		exitfunction KeyCode
+	endif
+endfunction -1
 
 // Joystick Handling
 function Input_JoystickUpdate()

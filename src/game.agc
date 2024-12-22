@@ -13,13 +13,17 @@ function Game()
 	local MyObjectID as integer
 	local MyClientID as integer
 	local FrameTime# as float
+	local ReadPath$ as string
 	
 	//TODO: Read this from Settings File
 	ReceivePort = 26001
 	TransmitPort = 26002
+	
 	//local IP for udp to listen on
 	//agk doesn't always retrieve the correct ip connected to the internet so we need an external application for that
-	LocalIP$ = GetDeviceIP()
+	ReadPath$=GetReadPath()
+	MP_WriteLocalIP(ReadPath$+"media/settings/publicip.ini")
+	LocalIP$=MP_ReadLocalIP(ReadPath$+"media/settings/publicip.ini")
 	
 	MP_Init(8, 0.015, 4)
 	
@@ -27,8 +31,7 @@ function Game()
 		Result = MP_CreateHost("", PlayerName$, ReceivePort, TransmitPort, LocalIP$)
 	else
 		IP$ = Core_RequestString(LocalIP$, 50, 9)
-		PlayerName$ = "Anonymous" + str(random(1, 100))
-		Result = MP_CreateClient("", PlayerName$, IP$, TransmitPort, ReceivePort, LocalIP$, 4)
+		Result = MP_CreateClient("", "", IP$, TransmitPort, ReceivePort, LocalIP$, 4)
 	endif
 	
 	//TODO: put this in functions
@@ -141,7 +144,8 @@ function Game_UpdateTextPosition(ClientID)
 	PosZ# = GetObjectZ(Client[ClientID].ObjectID)
 	TextX# = GetScreenXFrom3D(PosX#, PosY#, PosZ#)
 	TextY# = GetScreenYFrom3D(PosX#, PosY#, PosZ#)
-	
+
+	SetTextString(Client[ClientID].TextID, GetTextString(Client[ClientID].TextID))
 	SetTextPosition(Client[ClientID].TextID, TextX#, TextY#)
 endfunction
 

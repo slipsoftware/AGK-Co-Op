@@ -79,6 +79,10 @@ type EntityData
 	Angle as Core_Vec3Data
 endtype
 
+type LocalIPData
+	LocalIP$ as string
+endtype
+
 global Messages as MessageData[]
 global Client as ClientData[]
 global MP as NetworkData
@@ -88,6 +92,28 @@ function MP_Init(MaxClients as integer,  Latency# as float,  RegisterTimeout# as
 	MP.Latency# = Latency#
 	MP.RegisterTimeout# = RegisterTimeout#
 endfunction
+
+function MP_WriteLocalIP(SettingPath$)
+	if GetDeviceBaseName()="windows"
+		local AppID as integer
+		local SettingDirectory$ as string
+
+		SettingPath$=SimplifyPath(SettingPath$)
+		SettingDirectory$=Core_GetDirectoriesFromPath(SettingPath$)
+
+		AppID=RunApp("raw:"+SettingDirectory$+"WriteLocalIP.exe",chr(34)+SettingPath$+chr(34)+" localip$")
+		repeat
+		until GetAppRunning(AppID)=0
+	endif
+Endfunction
+
+function MP_ReadLocalIP(SettingPath$)
+	local LocalIP as LocalIPData
+	local Json$ as string
+
+	Json$=Core_FileLoad("raw:"+SettingPath$)
+	LocalIP.fromJSON(Json$)
+Endfunction LocalIP.LocalIP$
 
 function MP_CreateHost(GameName$, PlayerName$, ReceivePort, TransmitPort, LocalIP$)
 	local NetworkName$ as string
@@ -1081,7 +1107,7 @@ function MP_Info()
 			Text$ = Text$ + "Pos: " + str(Client[ClientID].Pos.X#) + ", " + str(Client[ClientID].Pos.Y#) + ", " + str(Client[ClientID].Pos.Z#) + chr(10)
 			Text$ = Text$ + "Angle: " + str(Client[ClientID].Angle.X#) + ", " + str(Client[ClientID].Angle.Y#) + ", " + str(Client[ClientID].Angle.Z#) + chr(10)
 			if GetTextExists(Client[ClientID].TextID)
-				SetTextString(Client[ClientID].TextID, Text$)	
+				SetTextString(Client[ClientID].TextID, Text$)
 				SetTextPosition(Client[ClientID].TextID, GetScreenBoundsLeft(), 25 + 20 * ClientID)
 				SetTextColor(Client[ClientID].TextID, 0, 0, 0, 255)
 				Game_UpdateTextPosition(ClientID)

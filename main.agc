@@ -29,8 +29,10 @@ SetClearColor(23,64,128)
 #include "src/Game.agc"
 
 
-//Init variables
-// runImport()
+// Init variables
+local ReadPath$ as string
+ReadPath$=GetReadPath()
+Input_Init(9, 3, 300, ReadPath$+"media/settings/keybindings.ini")
 
 Menu_Init()
 end

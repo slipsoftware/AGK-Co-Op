@@ -184,7 +184,7 @@ function Core_Sign(value#)
 endfunction result
 
 function Core_FileLoad(Filename$)
-	local string$ as string
+	local String$ as string
 	local memblockId as integer
 	if GetFileExists(Filename$)
 		MemblockID = CreateMemblockFromFile(Filename$)
@@ -199,6 +199,18 @@ function Core_FileSave(String$, Filename$)
     WriteString(FileID, String$)
     CloseFile(FileID)
 endfunction
+
+Function Core_GetFileNameFromPath(Path$)
+	local Index as integer
+	Index=len(Path$)-FindStringReverse(Path$, "/")
+	Path$=Right(Path$, Index)
+Endfunction Path$
+
+Function Core_GetDirectoriesFromPath(Path$)
+	local Index as integer
+	Index=FindStringReverse(Path$, "/")
+	Path$=Left(Path$, Index)
+Endfunction Path$
 
 function Core_RequestString(String$, SizeX#, SizeY#)
 	local EditBoxID as integer
@@ -215,4 +227,5 @@ function Core_RequestString(String$, SizeX#, SizeY#)
     String$ = GetEditBoxText(EditBoxID)
     DeleteEditBox(EditBoxID)
 endfunction String$
+
 

@@ -5,3 +5,4 @@ media/settings/keybindings.ini
 dist/
 build/
 *.spec
+media/settings/publicip.ini
