@@ -18,12 +18,12 @@ function Game()
 	//TODO: Read this from Settings File
 	ReceivePort = 26001
 	TransmitPort = 26002
-	
+
 	//local IP for udp to listen on
 	//agk doesn't always retrieve the correct ip connected to the internet so we need an external application for that
 	ReadPath$=GetReadPath()
-	MP_WriteLocalIP(ReadPath$+"media/settings/publicip.ini")
-	LocalIP$=MP_ReadLocalIP(ReadPath$+"media/settings/publicip.ini")
+	MP_WriteLocalIP(ReadPath$+"media/settings/localip.ini")
+	LocalIP$=MP_ReadLocalIP(ReadPath$+"media/settings/localip.ini")
 	
 	MP_Init(8, 0.015, 4)
 	

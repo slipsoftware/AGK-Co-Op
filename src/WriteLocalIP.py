@@ -1,4 +1,4 @@
-# Convert to exe with: pyinstaller --onefile --icon=dev\ip-network.ico src\WriteLocalIP.py
+# Convert to exe with: pyinstaller --onefile --noconsole --icon=dev\ip-network.ico src\WriteLocalIP.py
 
 import json
 import socket
