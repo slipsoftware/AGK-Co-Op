@@ -1,3 +1,7 @@
 
 media/bytecode.byc
 AGK-Co-Op.exe
+media/settings/keybindings.ini
+dist/
+build/
+*.spec
