@@ -34,7 +34,7 @@ function Game()
 		Result = MP_CreateClient("", "", IP$, TransmitPort, ReceivePort, LocalIP$, 4)
 	endif
 	
-	//TODO: put this in functions
+	//TODO: Put Code after this in functions
 	global ChatEditboxID
 	ChatEditboxID = CreateEditBox()
 	SetEditBoxPosition(ChatEditboxID, GetScreenBoundsLeft(), GetScreenBoundsTop())
@@ -48,8 +48,15 @@ function Game()
 	WorldObjectID = CreateObjectPlane(10, 10)
 	RotateObjectLocalX(WorldObjectID, 90)
 	
+	// Sound Test
+	local SoundID as integer
+	local Sound3DID as integer
+	SoundID = LoadSound("sounds/rain-16bit.wav")
+	Sound3DID = Sound3D_Create(SoundID, 0.0, 0.0, 0.0, 100.0, 1.0, 1, 1.0, 0)
+	Sound3D_SetPosition(Sound3DID, 0, 32, 0)
+
 	Cam_Init()
-	
+	// Game Loop
 	do
 		FrameTime# = GetFrameTime()
 		MyObjectID = Client[MP.MyClientID].ObjectID
@@ -58,10 +65,13 @@ function Game()
 		MP_UpdateClientData(MP.MyClientID, Camera.Position.X#, Camera.Position.Y#, Camera.Position.Z#, Camera.Angle.X#, Camera.Angle.Y#)	
 		Game_UpdateAllPlayers()
 		
-		if GetRawKeyState(KEY_F1)
+		if GetRawKeyPressed(KEY_F1)
+			Sound3D_Stop(Sound3DID)
+		elseif GetRawKeyState(KEY_F1)
 			MP_Info()
 		elseif GetRawKeyReleased(KEY_F1)
 			MP_DeleteInfo()
+			Sound3D_Play(Sound3DID, 1)
 		endif
 		
 		if GetEditBoxChanged(ChatEditboxID) = 1 and GetEditBoxHasFocus(ChatEditboxID) = 0
@@ -77,6 +87,7 @@ function Game()
 		endif
 		
 		MP_Update()
+		Sound3D_Update()
 		
 	    Sync()
 	loop
@@ -84,6 +95,9 @@ function Game()
 	DeleteObject(WorldObjectID)
 	DeleteEditBox(ChatEditboxID)
 	Game_DeleteAllPlayer()
+
+	DeleteSound(SoundID)
+	Sound3D_Delete(Sound3DID)
 	
 	MP_ClientDisconnect()
 endfunction STATE_MAIN_MENU
