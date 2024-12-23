@@ -351,11 +351,12 @@ function MP_HostReceiveTCP()
 			ClientID = MP_GetClientIDFromNetID(NetID)
 			Client[ClientID].Ping# = GetNetworkClientPing(MP.TCP.NetworkID, NetID)
 			
-			if GetNetworkClientDisconnected(MP.TCP.NetworkID, NetID) = 1
+			if GetNetworkClientDisconnected(MP.TCP.NetworkID, NetID) = 1 or GetNetworkClientDisconnected(MP.UDP.NetworkID, NetID) = 1
 				if GetNetworkClientUserData(MP.TCP.NetworkID, NetID, 0) = 1
 					ClientID = MP_GetClientIDFromNetID(NetID)
 					MP_RemovePlayer(ClientID)
 					
+					DeleteNetworkClient(MP.UDP.NetworkID, NetID)
 					DeleteNetworkClient(MP.TCP.NetworkID, NetID)
 					
 					MessageID = CreateNetworkMessage()
@@ -363,7 +364,10 @@ function MP_HostReceiveTCP()
 					AddNetworkMessageByte(MessageID, NetID)
 					SendNetworkMessage(MP.TCP.NetworkID, 0, MessageID)
 					
-					if GetNetworkNumClients(MP.TCP.NetworkID) <= MP.MaxClients then SetNetworkAllowClients(MP.TCP.NetworkID)
+					if GetNetworkNumClients(MP.TCP.NetworkID) <= MP.MaxClients
+						SetNetworkAllowClients(MP.UDP.NetworkID)
+						SetNetworkAllowClients(MP.TCP.NetworkID)
+					endif
 					SetNetworkClientUserData(MP.TCP.NetworkID, NetID, 0, 0)
 					
 					//update master server here
@@ -416,7 +420,11 @@ function MP_HostReceiveTCP()
 				AddNetworkMessageFloat(MessageID, Spawn.Z#)
 				SendNetworkMessage(MP.TCP.NetworkID, 0, MessageID)
 				
-				if GetNetworkNumClients(MP.TCP.NetworkID) >= MP.MaxClients then SetNetworkNoMoreClients(MP.TCP.NetworkID)
+				if GetNetworkNumClients(MP.TCP.NetworkID) >= MP.MaxClients
+					SetNetworkNoMoreClients(MP.TCP.NetworkID)
+					SetNetworkNoMoreClients(MP.UDP.NetworkID)
+				endif
+				
 				SetNetworkClientUserData(MP.TCP.NetworkID, NetID, 0, 1)
 				
 				//update master server here
@@ -546,8 +554,10 @@ function MP_HostReceiveUDP()
 					endif
 				endif
 			endcase
+			case default:
+				DeleteNetworkMessage(MessageID)
+			endcase
 		endselect
-		DeleteNetworkMessage(MessageID)
 		MessageID = GetUDPNetworkMessage(MP.UDP.NetworkID)
 	endwhile
 endfunction
@@ -898,8 +908,10 @@ function MP_ClientReceiveUDP()
 				
 				//Update Entity here
 			endcase
+			case default:
+				DeleteNetworkMessage(MessageID)
+			endcase
 		endselect
-		DeleteNetworkMessage(MessageID)
 		MessageID = GetUDPNetworkMessage(MP.UDP.NetworkID)
 	endwhile
 endfunction
@@ -958,11 +970,12 @@ function MP_ClientTransmitMessage(Message$)
 	MP_AddMessage(Client[MP.MyClientID].Name$, Message$, GetUnixTime())
 endfunction
 
-function MP_ClientDisconnect()
+function MP_Disconnect()
 	MP_RemoveAllMessages()
 	
-	CloseNetwork(MP.TCP.NetworkID)
 	DeleteUDPListener(MP.UDP.NetworkID)
+	if GetNetworkExists(MP.UDP.NetworkID) then CloseNetwork(MP.UDP.NetworkID)
+	if GetNetworkExists(MP.TCP.NetworkID) then CloseNetwork(MP.TCP.NetworkID)
 	Client.length =  -1
 endfunction
 
@@ -987,7 +1000,7 @@ function MP_RemoveAllMessages()
 	for MessageID = 0 to Messages.length
 		DeleteText(Messages[MessageID].TextID)
 	next MessageID
-	Messages.length =  -1
+	Messages.length = -1
 endfunction
 
 function MP_MessagesUpdate(MaxMessages)

@@ -33,73 +33,73 @@ function Game()
 		IP$ = Core_RequestString(LocalIP$, 50, 9)
 		Result = MP_CreateClient("", "", IP$, TransmitPort, ReceivePort, LocalIP$, 4)
 	endif
-	
-	//TODO: Put Code after this in functions
-	global ChatEditboxID
-	ChatEditboxID = CreateEditBox()
-	SetEditBoxPosition(ChatEditboxID, GetScreenBoundsLeft(), GetScreenBoundsTop())
-	SetEditBoxSize(ChatEditboxID, 20, 2)
-	SetEditBoxBorderSize(ChatEditboxID, 0.2)
-	SetEditBoxBackgroundColor(ChatEditboxID, 255, 255, 255, 64)
-	SetEditBoxBorderColor(ChatEditboxID, 255, 255, 255, 64)
-	FixEditBoxToScreen(ChatEditboxID, 1)
-	
-	local WorldObjectID as integer
-	WorldObjectID = CreateObjectPlane(10, 10)
-	RotateObjectLocalX(WorldObjectID, 90)
-	
-	// Sound Test
-	local SoundID as integer
-	local Sound3DID as integer
-	SoundID = LoadSound("sounds/rain-16bit.wav")
-	Sound3DID = Sound3D_Create(SoundID, 0.0, 0.0, 0.0, 100.0, 1.0, 1, 1.0, 0)
-	Sound3D_SetPosition(Sound3DID, 0, 32, 0)
+	if Result = 1
+		//TODO: Put Code after this in functions
+		global ChatEditboxID
+		ChatEditboxID = CreateEditBox()
+		SetEditBoxPosition(ChatEditboxID, GetScreenBoundsLeft(), GetScreenBoundsTop())
+		SetEditBoxSize(ChatEditboxID, 20, 2)
+		SetEditBoxBorderSize(ChatEditboxID, 0.2)
+		SetEditBoxBackgroundColor(ChatEditboxID, 255, 255, 255, 64)
+		SetEditBoxBorderColor(ChatEditboxID, 255, 255, 255, 64)
+		FixEditBoxToScreen(ChatEditboxID, 1)
+		
+		local WorldObjectID as integer
+		WorldObjectID = CreateObjectPlane(10, 10)
+		RotateObjectLocalX(WorldObjectID, 90)
+		
+		// Sound Test
+		local SoundID as integer
+		local Sound3DID as integer
+		SoundID = LoadSound("sounds/rain-16bit.wav")
+		Sound3DID = Sound3D_Create(SoundID, 0.0, 0.0, 0.0, 100.0, 1.0, 1, 1.0, 0)
+		Sound3D_SetPosition(Sound3DID, 0, 32, 0)
 
-	Cam_Init()
-	// Game Loop
-	do
-		FrameTime# = GetFrameTime()
-		MyObjectID = Client[MP.MyClientID].ObjectID
-		
-		Cam_Update(FrameTime#)
-		MP_UpdateClientData(MP.MyClientID, Camera.Position.X#, Camera.Position.Y#, Camera.Position.Z#, Camera.Angle.X#, Camera.Angle.Y#)	
-		Game_UpdateAllPlayers()
-		
-		if GetRawKeyPressed(KEY_F1)
-			Sound3D_Stop(Sound3DID)
-		elseif GetRawKeyState(KEY_F1)
-			MP_Info()
-		elseif GetRawKeyReleased(KEY_F1)
-			MP_DeleteInfo()
-			Sound3D_Play(Sound3DID, 1)
-		endif
-		
-		if GetEditBoxChanged(ChatEditboxID) = 1 and GetEditBoxHasFocus(ChatEditboxID) = 0
-			Game_SendMessage(GetEditBoxText(ChatEditboxID))
-			SetEditBoxText(ChatEditboxID, "")
-		endif
-		MP_MessagesUpdate(10)
-		
-		if GetRawKeyReleased(KEY_ESCAPE) then exit
-		if MP_TCPIsConnected() = 0 or MP_UDPIsConnected() = 0
-			Message("Connection Lost !")
-			exit
-		endif
-		
-		MP_Update()
-		Sound3D_Update()
-		
-	    Sync()
-	loop
-	//TODO: Put this into functions
-	DeleteObject(WorldObjectID)
-	DeleteEditBox(ChatEditboxID)
+		Cam_Init()
+		// Game Loop
+		do
+			FrameTime# = GetFrameTime()
+			MyObjectID = Client[MP.MyClientID].ObjectID
+			
+			Cam_Update(FrameTime#)
+			MP_UpdateClientData(MP.MyClientID, Camera.Position.X#, Camera.Position.Y#, Camera.Position.Z#, Camera.Angle.X#, Camera.Angle.Y#)	
+			Game_UpdateAllPlayers()
+			
+			if GetRawKeyPressed(KEY_F1)
+				Sound3D_Stop(Sound3DID)
+			elseif GetRawKeyState(KEY_F1)
+				MP_Info()
+			elseif GetRawKeyReleased(KEY_F1)
+				MP_DeleteInfo()
+				Sound3D_Play(Sound3DID, 1)
+			endif
+			
+			if GetEditBoxChanged(ChatEditboxID) = 1 and GetEditBoxHasFocus(ChatEditboxID) = 0
+				Game_SendMessage(GetEditBoxText(ChatEditboxID))
+				SetEditBoxText(ChatEditboxID, "")
+			endif
+			MP_MessagesUpdate(10)
+			
+			if GetRawKeyReleased(KEY_ESCAPE) then exit
+			if MP_TCPIsConnected() = 0 or MP_UDPIsConnected() = 0
+				Message("Connection Lost !")
+				exit
+			endif
+			
+			MP_Update()
+			Sound3D_Update()
+			
+			Sync()
+		loop
+		//TODO: Put this into functions
+		DeleteObject(WorldObjectID)
+		DeleteEditBox(ChatEditboxID)
+
+		DeleteSound(SoundID)
+		Sound3D_Delete(Sound3DID)
+	endif
 	Game_DeleteAllPlayer()
-
-	DeleteSound(SoundID)
-	Sound3D_Delete(Sound3DID)
-	
-	MP_ClientDisconnect()
+	MP_Disconnect()
 endfunction STATE_MAIN_MENU
 
 function Game_CreatePlayer()
