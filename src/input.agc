@@ -225,34 +225,47 @@ function Input_Write()
 endfunction
 
 // Mouse Handling
-function Input_MouseUpdate()	
-	Input.Mouse.Current.X#=GetPointerX()
-	Input.Mouse.Current.Y#=GetPointerY()
-	
-    if GetPointerPressed()=1
-        Input.Mouse.Start.X#=Input.Mouse.Current.X#
-        Input.Mouse.Start.Y#=Input.Mouse.Current.Y#
-    elseif GetPointerReleased()=1
-        Input.Mouse.Stop.X#=Input.Mouse.Current.X#
-        Input.Mouse.Stop.Y#=Input.Mouse.Current.Y#
-    endif
-    if GetPointerState()=1
-	    Input.Mouse.Drag.X#=Input.Mouse.Current.X#-Input.Mouse.Start.X#
-	    Input.Mouse.Drag.Y#=Input.Mouse.Current.Y#-Input.Mouse.Start.Y#
-	endif
-endfunction
+function Input_MouseUpdate()
+	Input_GetMouseDrag()
+	Input_GetMouseReleasePoition()
+endfunction Input.Mouse
 
 Function Input_GetMouseCurrentPoition()
+	Input.Mouse.Current.X# = GetPointerX()
+	Input.Mouse.Current.Y# = GetPointerY()
 Endfunction Input.Mouse.Current
 
 Function Input_GetMousePressedPoition()
+    if GetPointerPressed()
+        Input.Mouse.Start = Input_GetMouseCurrentPoition()
+	endif
 Endfunction Input.Mouse.Start
 
 Function Input_GetMouseReleasePoition()
+	if GetPointerReleased()
+        Input.Mouse.Stop = Input_GetMouseCurrentPoition()
+    endif
 Endfunction Input.Mouse.Stop
 
 Function Input_GetMouseDrag()
-Endfunction Input.Mouse.Stop
+	Input_GetMouseCurrentPoition()
+	Input_GetMousePressedPoition()
+
+	if GetPointerState()
+		Input.Mouse.Drag.X#=Input.Mouse.Current.X#-Input.Mouse.Start.X#
+		Input.Mouse.Drag.Y#=Input.Mouse.Current.Y#-Input.Mouse.Start.Y#
+	endif
+Endfunction Input.Mouse.Drag
+
+Function Input_GetMouseDelta()
+	Input_GetMouseCurrentPoition()
+	Input_GetMousePressedPoition()
+
+	if GetPointerState()
+		Input.Mouse.Drag.X#=Input.Mouse.Current.X#-Input.Mouse.Start.X#
+		Input.Mouse.Drag.Y#=Input.Mouse.Current.Y#-Input.Mouse.Start.Y#
+	endif
+Endfunction Input.Mouse.Drag
 
 // Keyboard Handling
 function Input_SetDefaultBinding()
