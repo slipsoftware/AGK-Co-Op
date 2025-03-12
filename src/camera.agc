@@ -1,5 +1,13 @@
 // File: Camera.agc
 // Created: 24-11-24
+// Dependencies: Core.agc
+
+#Constant Camera_KEY_A 65
+#Constant Camera_KEY_D 68
+#Constant Camera_KEY_E 69
+#Constant Camera_KEY_Q 81
+#Constant Camera_KEY_S 83
+#Constant Camera_KEY_W 87
 
 type CameraData
 	Position as Core_Vec3Data
@@ -14,10 +22,14 @@ global Camera as CameraData // from camera prolly shaders will access or replace
 global Camera_OldMouseX# as float
 global Camera_OldMouseY# as float
 
-function Cam_Init()
-	Camera.Speed#  =  10.0			// Movement speed
-	Camera.Sensitivity#  =  1.0		// Mouse sensitivity
-	Camera.Smoothing#  =  10.0  	// Smoothing factor for rotation
+function Cam_Init(Speed#, Sensitivity#, Smoothing#)
+	if Speed# = 0 then Speed# = 1.0
+	if Sensitivity# = 0 then Sensitivity# = 1.0
+	if Smoothing# = 0 then Smoothing# = 10.0
+
+	Camera.Speed#  =  Speed#				// Movement speed
+	Camera.Sensitivity#  =  Sensitivity#	// Mouse sensitivity
+	Camera.Smoothing#  =  Smoothing#		// Smoothing factor for rotation
 endfunction
 
 function Cam_Debug()
@@ -68,13 +80,12 @@ function Cam_Update(FrameTime#)
     // Update camera rotation directly on the X and Y axes
     SetCameraRotation(1,Camera.Angle.X#,Camera.Angle.Y#,0)
     
-    
-	if GetRawKeyState(Key_W) then MoveCameraLocalZ(1, Camera.Speed# * FrameTime#)
-    if GetRawKeyState(Key_S) then MoveCameraLocalZ(1, - Camera.Speed# * FrameTime#)
-    if GetRawKeyState(Key_A) then MoveCameraLocalX(1, - Camera.Speed# * FrameTime#)
-    if GetRawKeyState(Key_D) then MoveCameraLocalX(1, Camera.Speed# * FrameTime#)
-    if GetRawKeyState(Key_Q) then MoveCameraLocalY(1, - Camera.Speed# * FrameTime#)
-    if GetRawKeyState(Key_E) then MoveCameraLocalY(1, Camera.Speed# * FrameTime#)
+	if GetRawKeyState(Camera_Key_W) then MoveCameraLocalZ(1, Camera.Speed# * FrameTime#)
+    if GetRawKeyState(Camera_Key_S) then MoveCameraLocalZ(1, - Camera.Speed# * FrameTime#)
+    if GetRawKeyState(Camera_Key_A) then MoveCameraLocalX(1, - Camera.Speed# * FrameTime#)
+    if GetRawKeyState(Camera_Key_D) then MoveCameraLocalX(1, Camera.Speed# * FrameTime#)
+    if GetRawKeyState(Camera_Key_Q) then MoveCameraLocalY(1, - Camera.Speed# * FrameTime#)
+    if GetRawKeyState(Camera_Key_E) then MoveCameraLocalY(1, Camera.Speed# * FrameTime#)
     
     Camera.Position.X# = GetCameraX(1)
     Camera.Position.Y# = GetCameraY(1)
