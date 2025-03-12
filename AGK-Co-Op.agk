@@ -48,16 +48,24 @@ dynamic_memory=0
 output_path=
 
 [projectfiles]
-FILE_0=src%2FCamera_Control.agc;-1
-FILE_1=src%2Fcore.agc;-1
-FILE_2=src%2FImport.agc;-1
-FILE_3=main.agc;-1
+FILE_0=src%2Fcore.agc;-1
+FILE_1=src%2FImport.agc;-1
+FILE_2=main.agc;-1
+FILE_3=src%2FNetwork.agc;-1
+FILE_4=src%2Fgame.agc;-1
+FILE_5=src%2FInput.agc;-1
+FILE_6=src%2FCamera.agc;-1
+FILE_7=src%2FSound3D.agc;-1
 
 [files]
-FILE_NAME_0=0;src%2FCamera_Control.agc;0;0
-FILE_NAME_1=1;src%2Fcore.agc;50;1
-FILE_NAME_2=0;src%2FImport.agc;29;2
-FILE_NAME_3=0;main.agc;18;3
+FILE_NAME_0=0;src%2Fcore.agc;54;0
+FILE_NAME_1=0;src%2FImport.agc;41;1
+FILE_NAME_2=0;main.agc;31;2
+FILE_NAME_3=0;src%2FNetwork.agc;443;3
+FILE_NAME_4=1;src%2Fgame.agc;143;4
+FILE_NAME_5=0;src%2FInput.agc;237;5
+FILE_NAME_6=0;src%2FCamera.agc;24;6
+FILE_NAME_7=0;src%2FSound3D.agc;0;7
 
 [watchvariables]
 

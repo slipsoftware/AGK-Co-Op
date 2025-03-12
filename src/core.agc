@@ -183,6 +183,29 @@ function Core_Sign(value#)
     result = ((value#>0) * 2) -1
 endfunction result
 
+function Core_GetMask(Mask, Check)
+	local Result as integer
+	Result = Mask && Check > 0
+endfunction Result
+
+function Core_AddMask(Mask, Add)
+	local Result as integer
+	Result = Mask || Add
+endfunction Result
+
+function Core_RemoveMask(Mask, Remove)
+	local Result as integer
+	Result = Mask && !Remove
+endfunction Result
+
+function Core_SwitchMask(Mask, Switch)
+    if Core_GetMask(Mask, Switch) = 1
+        dec Mask, Switch
+    else
+        inc Mask, Switch
+    endif
+endfunction Mask
+
 function Core_FileLoad(Filename$)
 	local String$ as string
 	local memblockId as integer
