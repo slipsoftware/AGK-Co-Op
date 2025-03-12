@@ -3,17 +3,16 @@
 
 #constant MP_MasterServerUrl$	"OurMasterServer"
 
-#constant NET_JOIN				1
+#constant NET_JOIN			1
 #constant NET_DISCONNECT		2
-#constant NET_MESSAGE			3
-#constant NET_MOVE				4
-#constant NET_SHOT				5
-#constant NET_HITWALL			6
-#constant NET_HITPLAYER			7
-#constant NET_PROJECTILE		8
-#constant NET_DEATH				9
-#constant NET_ENTITY			10
-#constant NET_WEAPON			11
+#constant NET_MESSAGE		3
+#constant NET_MOVE			4
+#constant NET_SHOT			5
+#constant NET_HITWALL		6
+#constant NET_HITPLAYER		7
+#constant NET_DEATH			8
+#constant NET_ENTITY			9
+#constant NET_WEAPON			10
 
 type ConnectionData
 	NetworkID as integer
@@ -440,13 +439,22 @@ function MP_HostReceiveTCP()
 				Client[ClientID].Angle.Z# = GetNetworkMessageFloat(MessageID)
 				DeleteNetworkMessage(MessageID)
 				
-				ProjectileID = MP_Shot( -1, ClientID)
+				local RayDir as Core_Vec3Data
+				local HitObjectID as integer
+				RayDir=Game_GetDirFromAngle(Client[ClientID].Angle.X#,Client[ClientID].Angle.Y#)
+				HitObjectID=Game_GetRayCast(RayDir,Client[ClientID].Pos)
 				
-				for ID = 1 to Client.length
+				for ID = 0 to Client.length
+					if HitObjectID=Client[ID].ObjectID
+						MP_HostTransmitMessage("Player: "+Client[ID].Name$+" was hit by "+Client[ClientID].Name$)
+						MP_HostTransmitHitPlayer(ID, ClientID)
+					endif
+				next ID
+				
+				for ID = 1 to Client.length					
 					MessageID = CreateNetworkMessage()
 					AddNetworkMessageByte(MessageID, NET_SHOT)
 					AddNetworkMessageByte(MessageID, Client[ClientID].NetID)
-					AddNetworkMessageByte(MessageID, ProjectileID)
 					AddNetworkMessageFloat(MessageID, Client[ClientID].Pos.X#)
 					AddNetworkMessageFloat(MessageID, Client[ClientID].Pos.Y#)
 					AddNetworkMessageFloat(MessageID, Client[ClientID].Pos.Z#)
@@ -583,12 +591,11 @@ function MP_HostTransmitMove()
 	next ID
 endfunction
 
-function MP_HostTransmitHitWall(ProjectileID, PosX#, PosY#, PosZ#)
+function MP_HostTransmitHitWall(PosX#, PosY#, PosZ#)
 	local MessageID as integer
 	
 	MessageID = CreateNetworkMessage()
 	AddNetworkMessageByte(MessageID, NET_HITWALL)
-	AddNetworkMessageByte(MessageID, ProjectileID)
 	AddNetworkMessageFloat(MessageID, PosX#)
 	AddNetworkMessageFloat(MessageID, PosY#)
 	AddNetworkMessageFloat(MessageID, PosZ#)
@@ -616,13 +623,12 @@ function MP_HostSwitchWeapon(EntityID)
 	SendNetworkMessage(MP.TCP.NetworkID, 0, MessageID)
 endfunction
 
-function MP_HostTransmitShot(ProjectileID)
+function MP_HostTransmitShot()
 	local MessageID as integer
 	
 	MessageID = CreateNetworkMessage()
 	AddNetworkMessageByte(MessageID, NET_SHOT)
 	AddNetworkMessageByte(MessageID, MP.MyNetID)
-	AddNetworkMessageByte(MessageID, ProjectileID)
 	AddNetworkMessageFloat(MessageID, Client[MP.MyClientID].Pos.X#)
 	AddNetworkMessageFloat(MessageID, Client[MP.MyClientID].Pos.Y#)
 	AddNetworkMessageFloat(MessageID, Client[MP.MyClientID].Pos.Z#)
@@ -764,7 +770,6 @@ function MP_ClientReceiveTCP()
 			endcase
 			case NET_SHOT:
 				NetID = GetNetworkMessageByte(MessageID)
-				ProjectileID = GetNetworkMessageByte(MessageID)
 				ClientID = MP_GetClientIDFromNetID(NetID)
 				Client[ClientID].OldPos = Client[ClientID].Pos
 				ClientPosX# = GetNetworkMessageFloat(MessageID)

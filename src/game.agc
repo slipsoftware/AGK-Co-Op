@@ -48,6 +48,21 @@ function Game()
 		WorldObjectID = CreateObjectPlane(10, 10)
 		RotateObjectLocalX(WorldObjectID, 90)
 		
+		local XObjectID as integer
+		XObjectID = CreateObjectBox(1,1,1)
+		SetObjectPosition(XObjectID,10,0,0)
+		SetObjectColor(XObjectID,255,0,0,255)
+		
+		local YObjectID as integer
+		YObjectID = CreateObjectBox(1,1,1)
+		SetObjectPosition(YObjectID,0,10,0)
+		SetObjectColor(YObjectID,0,255,0,255)
+		
+		local ZObjectID as integer
+		ZObjectID = CreateObjectBox(1,1,1)
+		SetObjectPosition(ZObjectID,0,0,10)
+		SetObjectColor(ZObjectID,0,0,255,255)
+		
 		// Sound Test
 		local SoundID as integer
 		local Sound3DID as integer
@@ -55,7 +70,7 @@ function Game()
 		Sound3DID = Sound3D_Create(SoundID, 0.0, 0.0, 0.0, 100.0, 1.0, 1, 1.0, 0)
 		Sound3D_SetPosition(Sound3DID, 0, 32, 0)
 
-		Cam_Init()
+		Cam_Init(10, 1, 10)
 		// Game Loop
 		do
 			FrameTime# = GetFrameTime()
@@ -73,6 +88,11 @@ function Game()
 				MP_DeleteInfo()
 				Sound3D_Play(Sound3DID, 1)
 			endif
+			
+			if GetPointerPressed()
+				Game_Shot()
+			endif
+			
 			
 			if GetEditBoxChanged(ChatEditboxID) = 1 and GetEditBoxHasFocus(ChatEditboxID) = 0
 				Game_SendMessage(GetEditBoxText(ChatEditboxID))
@@ -171,9 +191,72 @@ function Game_SendMessage(Message$)
 	endif
 endfunction
 
+function Game_Shot()
+	if MP.Host=1
+		local RayDir as Core_Vec3Data
+		local RayPos as Core_Vec3Data
+		local HitObjectID as integer
+		local ClientID as integer
+		
+		RayPos.X#=GetCameraX(1)
+		RayPos.Y#=GetCameraY(1)
+		RayPos.Z#=GetCameraZ(1)
+		RayDir=Game_GetDirFromAngle(GetCameraAngleX(1),GetCameraAngleY(1))
+		HitObjectID=Game_GetRayCast(RayDir,RayPos)
+		for ClientID = 0 to Client.length
+			if HitObjectID=Client[ClientID].ObjectID
+				MP_HostTransmitMessage("Player: "+Client[ClientID].Name$+" was hit by "+Client[MP.MyClientID].Name$)
+				MP_HostTransmitHitPlayer(ClientID, MP.MyClientID)
+			endif
+		next ClientID
+		
+		
+		MP_HostTransmitShot()
+	else
+		MP_ClientTransmitShot()
+	endif
+endfunction
+
 function Game_GetSpawnPoint()
 	local Spawn as Core_Vec3Data
 	Spawn.X# = 0
 	Spawn.Y# = 0
 	Spawn.Z# = 0
 endfunction Spawn
+
+function Game_GetDirFromScreen(PosX#,PosY#)
+	local Dir as Core_Vec3Data
+	Dir.X#=Get3DVectorXFromScreen(PosX#,PosY#)
+	Dir.Y#=Get3DVectorYFromScreen(PosX#,PosY#)
+	Dir.Z#=Get3DVectorZFromScreen(PosX#,PosY#)
+endfunction Dir
+
+function Game_GetDirFromAngle(AngleX# as float,AngleY# as float)
+	local Dir as Core_Vec3Data
+	local Length# as float
+	
+	Dir.X# = sin(AngleY#) * cos(AngleX#)
+	Dir.Y# = -sin(AngleX#)
+	Dir.Z# = cos(AngleY#) * cos(AngleX#)
+	
+	Length# = sqrt(Dir.X# * Dir.X# + Dir.Y# * Dir.Y# + Dir.Z# * Dir.Z#)
+	Dir.X# = Dir.X# / Length#
+	Dir.Y# = Dir.Y# / Length#
+	Dir.Z# = Dir.Z# / Length#
+endfunction Dir
+	
+function Game_GetRayCast(RayDir as Core_Vec3Data, RayPos as Core_Vec3Data)
+	local RayCast as Core_Vec3Data
+	local HitObjectID as integer
+	local CameraVectorID as integer
+	local RayVectorID as integer
+	
+	CameraVectorID=CreateVector3(RayPos.X#,RayPos.Y#,RayPos.Z#)
+	RayVectorID=CreateVector3(RayDir.X#,RayDir.Y#,RayDir.Z#)
+	GetVector3Multiply(RayVectorID,9999)
+	GetVector3Add(RayVectorID,CameraVectorID)
+
+	HitObjectID=ObjectRayCast(0,GetVector3X(CameraVectorID),GetVector3Y(CameraVectorID),GetVector3Z(CameraVectorID),GetVector3X(RayVectorID),GetVector3Y(RayVectorID),GetVector3Z(RayVectorID))
+	DeleteVector3(CameraVectorID)
+	DeleteVector3(RayVectorID)
+endfunction HitObjectID
