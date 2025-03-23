@@ -13,6 +13,7 @@
 #constant NET_DEATH			8
 #constant NET_ENTITY			9
 #constant NET_WEAPON			10
+#constant NET_PROJECTILE		11
 
 type ConnectionData
 	NetworkID as integer

@@ -48,21 +48,6 @@ function Game()
 		WorldObjectID = CreateObjectPlane(10, 10)
 		RotateObjectLocalX(WorldObjectID, 90)
 		
-		local XObjectID as integer
-		XObjectID = CreateObjectBox(1,1,1)
-		SetObjectPosition(XObjectID,10,0,0)
-		SetObjectColor(XObjectID,255,0,0,255)
-		
-		local YObjectID as integer
-		YObjectID = CreateObjectBox(1,1,1)
-		SetObjectPosition(YObjectID,0,10,0)
-		SetObjectColor(YObjectID,0,255,0,255)
-		
-		local ZObjectID as integer
-		ZObjectID = CreateObjectBox(1,1,1)
-		SetObjectPosition(ZObjectID,0,0,10)
-		SetObjectColor(ZObjectID,0,0,255,255)
-		
 		// Sound Test
 		local SoundID as integer
 		local Sound3DID as integer
