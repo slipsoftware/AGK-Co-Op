@@ -3,17 +3,16 @@
 
 #constant MP_MasterServerUrl$	"OurMasterServer"
 
-#constant NET_JOIN				1
+#constant NET_JOIN			1
 #constant NET_DISCONNECT		2
-#constant NET_MESSAGE			3
-#constant NET_MOVE				4
-#constant NET_SHOT				5
-#constant NET_HITWALL			6
-#constant NET_HITPLAYER			7
-#constant NET_PROJECTILE		8
-#constant NET_DEATH				9
-#constant NET_ENTITY			10
-#constant NET_WEAPON			11
+#constant NET_MESSAGE		3
+#constant NET_MOVE			4
+#constant NET_SHOT			5
+#constant NET_HITWALL		6
+#constant NET_HITPLAYER		7
+#constant NET_DEATH			8
+#constant NET_ENTITY			9
+#constant NET_WEAPON			10
 
 type ConnectionData
 	NetworkID as integer
@@ -79,6 +78,10 @@ type EntityData
 	Angle as Core_Vec3Data
 endtype
 
+type LocalIPData
+	LocalIP$ as string
+endtype
+
 global Messages as MessageData[]
 global Client as ClientData[]
 global MP as NetworkData
@@ -88,6 +91,28 @@ function MP_Init(MaxClients as integer,  Latency# as float,  RegisterTimeout# as
 	MP.Latency# = Latency#
 	MP.RegisterTimeout# = RegisterTimeout#
 endfunction
+
+function MP_WriteLocalIP(SettingPath$)
+	if GetDeviceBaseName()="windows"
+		local AppID as integer
+		local SettingDirectory$ as string
+
+		SettingPath$=SimplifyPath(SettingPath$)
+		SettingDirectory$=Core_GetDirectoriesFromPath(SettingPath$)
+
+		AppID=RunApp("raw:"+SettingDirectory$+"WriteLocalIP.exe",chr(34)+SettingPath$+chr(34)+" localip$")
+		repeat
+		until GetAppRunning(AppID)=0
+	endif
+Endfunction
+
+function MP_ReadLocalIP(SettingPath$)
+	local LocalIP as LocalIPData
+	local Json$ as string
+
+	Json$=Core_FileLoad("raw:"+SettingPath$)
+	LocalIP.fromJSON(Json$)
+Endfunction LocalIP.LocalIP$
 
 function MP_CreateHost(GameName$, PlayerName$, ReceivePort, TransmitPort, LocalIP$)
 	local NetworkName$ as string
@@ -325,11 +350,12 @@ function MP_HostReceiveTCP()
 			ClientID = MP_GetClientIDFromNetID(NetID)
 			Client[ClientID].Ping# = GetNetworkClientPing(MP.TCP.NetworkID, NetID)
 			
-			if GetNetworkClientDisconnected(MP.TCP.NetworkID, NetID) = 1
+			if GetNetworkClientDisconnected(MP.TCP.NetworkID, NetID) = 1 or GetNetworkClientDisconnected(MP.UDP.NetworkID, NetID) = 1
 				if GetNetworkClientUserData(MP.TCP.NetworkID, NetID, 0) = 1
 					ClientID = MP_GetClientIDFromNetID(NetID)
 					MP_RemovePlayer(ClientID)
 					
+					DeleteNetworkClient(MP.UDP.NetworkID, NetID)
 					DeleteNetworkClient(MP.TCP.NetworkID, NetID)
 					
 					MessageID = CreateNetworkMessage()
@@ -337,7 +363,10 @@ function MP_HostReceiveTCP()
 					AddNetworkMessageByte(MessageID, NetID)
 					SendNetworkMessage(MP.TCP.NetworkID, 0, MessageID)
 					
-					if GetNetworkNumClients(MP.TCP.NetworkID) <= MP.MaxClients then SetNetworkAllowClients(MP.TCP.NetworkID)
+					if GetNetworkNumClients(MP.TCP.NetworkID) <= MP.MaxClients
+						SetNetworkAllowClients(MP.UDP.NetworkID)
+						SetNetworkAllowClients(MP.TCP.NetworkID)
+					endif
 					SetNetworkClientUserData(MP.TCP.NetworkID, NetID, 0, 0)
 					
 					//update master server here
@@ -390,7 +419,11 @@ function MP_HostReceiveTCP()
 				AddNetworkMessageFloat(MessageID, Spawn.Z#)
 				SendNetworkMessage(MP.TCP.NetworkID, 0, MessageID)
 				
-				if GetNetworkNumClients(MP.TCP.NetworkID) >= MP.MaxClients then SetNetworkNoMoreClients(MP.TCP.NetworkID)
+				if GetNetworkNumClients(MP.TCP.NetworkID) >= MP.MaxClients
+					SetNetworkNoMoreClients(MP.TCP.NetworkID)
+					SetNetworkNoMoreClients(MP.UDP.NetworkID)
+				endif
+				
 				SetNetworkClientUserData(MP.TCP.NetworkID, NetID, 0, 1)
 				
 				//update master server here
@@ -406,13 +439,22 @@ function MP_HostReceiveTCP()
 				Client[ClientID].Angle.Z# = GetNetworkMessageFloat(MessageID)
 				DeleteNetworkMessage(MessageID)
 				
-				ProjectileID = MP_Shot( -1, ClientID)
+				local RayDir as Core_Vec3Data
+				local HitObjectID as integer
+				RayDir=Game_GetDirFromAngle(Client[ClientID].Angle.X#,Client[ClientID].Angle.Y#)
+				HitObjectID=Game_GetRayCast(RayDir,Client[ClientID].Pos)
 				
-				for ID = 1 to Client.length
+				for ID = 0 to Client.length
+					if HitObjectID=Client[ID].ObjectID
+						MP_HostTransmitMessage("Player: "+Client[ID].Name$+" was hit by "+Client[ClientID].Name$)
+						MP_HostTransmitHitPlayer(ID, ClientID)
+					endif
+				next ID
+				
+				for ID = 1 to Client.length					
 					MessageID = CreateNetworkMessage()
 					AddNetworkMessageByte(MessageID, NET_SHOT)
 					AddNetworkMessageByte(MessageID, Client[ClientID].NetID)
-					AddNetworkMessageByte(MessageID, ProjectileID)
 					AddNetworkMessageFloat(MessageID, Client[ClientID].Pos.X#)
 					AddNetworkMessageFloat(MessageID, Client[ClientID].Pos.Y#)
 					AddNetworkMessageFloat(MessageID, Client[ClientID].Pos.Z#)
@@ -520,8 +562,10 @@ function MP_HostReceiveUDP()
 					endif
 				endif
 			endcase
+			case default:
+				DeleteNetworkMessage(MessageID)
+			endcase
 		endselect
-		DeleteNetworkMessage(MessageID)
 		MessageID = GetUDPNetworkMessage(MP.UDP.NetworkID)
 	endwhile
 endfunction
@@ -547,12 +591,11 @@ function MP_HostTransmitMove()
 	next ID
 endfunction
 
-function MP_HostTransmitHitWall(ProjectileID, PosX#, PosY#, PosZ#)
+function MP_HostTransmitHitWall(PosX#, PosY#, PosZ#)
 	local MessageID as integer
 	
 	MessageID = CreateNetworkMessage()
 	AddNetworkMessageByte(MessageID, NET_HITWALL)
-	AddNetworkMessageByte(MessageID, ProjectileID)
 	AddNetworkMessageFloat(MessageID, PosX#)
 	AddNetworkMessageFloat(MessageID, PosY#)
 	AddNetworkMessageFloat(MessageID, PosZ#)
@@ -580,13 +623,12 @@ function MP_HostSwitchWeapon(EntityID)
 	SendNetworkMessage(MP.TCP.NetworkID, 0, MessageID)
 endfunction
 
-function MP_HostTransmitShot(ProjectileID)
+function MP_HostTransmitShot()
 	local MessageID as integer
 	
 	MessageID = CreateNetworkMessage()
 	AddNetworkMessageByte(MessageID, NET_SHOT)
 	AddNetworkMessageByte(MessageID, MP.MyNetID)
-	AddNetworkMessageByte(MessageID, ProjectileID)
 	AddNetworkMessageFloat(MessageID, Client[MP.MyClientID].Pos.X#)
 	AddNetworkMessageFloat(MessageID, Client[MP.MyClientID].Pos.Y#)
 	AddNetworkMessageFloat(MessageID, Client[MP.MyClientID].Pos.Z#)
@@ -728,7 +770,6 @@ function MP_ClientReceiveTCP()
 			endcase
 			case NET_SHOT:
 				NetID = GetNetworkMessageByte(MessageID)
-				ProjectileID = GetNetworkMessageByte(MessageID)
 				ClientID = MP_GetClientIDFromNetID(NetID)
 				Client[ClientID].OldPos = Client[ClientID].Pos
 				ClientPosX# = GetNetworkMessageFloat(MessageID)
@@ -872,8 +913,10 @@ function MP_ClientReceiveUDP()
 				
 				//Update Entity here
 			endcase
+			case default:
+				DeleteNetworkMessage(MessageID)
+			endcase
 		endselect
-		DeleteNetworkMessage(MessageID)
 		MessageID = GetUDPNetworkMessage(MP.UDP.NetworkID)
 	endwhile
 endfunction
@@ -932,11 +975,12 @@ function MP_ClientTransmitMessage(Message$)
 	MP_AddMessage(Client[MP.MyClientID].Name$, Message$, GetUnixTime())
 endfunction
 
-function MP_ClientDisconnect()
+function MP_Disconnect()
 	MP_RemoveAllMessages()
 	
-	CloseNetwork(MP.TCP.NetworkID)
 	DeleteUDPListener(MP.UDP.NetworkID)
+	if GetNetworkExists(MP.UDP.NetworkID) then CloseNetwork(MP.UDP.NetworkID)
+	if GetNetworkExists(MP.TCP.NetworkID) then CloseNetwork(MP.TCP.NetworkID)
 	Client.length =  -1
 endfunction
 
@@ -961,7 +1005,7 @@ function MP_RemoveAllMessages()
 	for MessageID = 0 to Messages.length
 		DeleteText(Messages[MessageID].TextID)
 	next MessageID
-	Messages.length =  -1
+	Messages.length = -1
 endfunction
 
 function MP_MessagesUpdate(MaxMessages)
@@ -1081,7 +1125,7 @@ function MP_Info()
 			Text$ = Text$ + "Pos: " + str(Client[ClientID].Pos.X#) + ", " + str(Client[ClientID].Pos.Y#) + ", " + str(Client[ClientID].Pos.Z#) + chr(10)
 			Text$ = Text$ + "Angle: " + str(Client[ClientID].Angle.X#) + ", " + str(Client[ClientID].Angle.Y#) + ", " + str(Client[ClientID].Angle.Z#) + chr(10)
 			if GetTextExists(Client[ClientID].TextID)
-				SetTextString(Client[ClientID].TextID, Text$)	
+				SetTextString(Client[ClientID].TextID, Text$)
 				SetTextPosition(Client[ClientID].TextID, GetScreenBoundsLeft(), 25 + 20 * ClientID)
 				SetTextColor(Client[ClientID].TextID, 0, 0, 0, 255)
 				Game_UpdateTextPosition(ClientID)

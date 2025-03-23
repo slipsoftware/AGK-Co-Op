@@ -20,8 +20,8 @@ endtype
 global Menu_TextColorUp as Core_ColorData
 global Menu_TextColorDown as Core_ColorData
 
-function Menu_GetItemHitTest(TextID, PosX#, PosY#, ColorUp as Core_ColorData, ColorDown as Core_ColorData)
-	if GetTextHitTest(TextID, PosX#, PosY#)
+function Menu_GetItemHitTest(TextID, Pointer as Core_Vec2Data, ColorUp as Core_ColorData, ColorDown as Core_ColorData)
+	if GetTextHitTest(TextID, Pointer.X#, Pointer.Y#)
 		SetTextColor(TextID, 192, 192, 192, 255)
 		if GetPointerReleased()
 			SetTextSize(TextID, 11)
@@ -31,6 +31,13 @@ function Menu_GetItemHitTest(TextID, PosX#, PosY#, ColorUp as Core_ColorData, Co
 		SetTextColor(TextID, 255, 255, 255, 255)
 	endif
 endfunction 0
+
+Function Menu_SetEditboxKey(EditBoxID, KeyCode)
+	if GetEditBoxHasFocus(EditBoxID) = 1 and KeyCode > -1 and KeyCode <> KEY_BACK
+		SetEditBoxText(EditBoxID, Input_GetKeyName(KeyCode))
+		exitfunction 1
+	endif
+Endfunction 0
 
 //main State Handler
 function Menu_Init()
@@ -83,8 +90,7 @@ endfunction
 // this function is subject to change
 function Menu_Main()	
 	local GameState as integer
-	local PointerX# as float
-	local PointerY# as float
+	local Pointer as Core_Vec2Data
 	
 	local HostTextID as integer
 	HostTextID = CreateText("Host Game")
@@ -107,24 +113,24 @@ function Menu_Main()
 	
 	GameState = STATE_MAIN_MENU
 	while GameState = STATE_MAIN_MENU
-		PointerX# = ScreenToWorldX(GetPointerX())
-		PointerY# = ScreenToWorldY(GetPointerY())
-		
-		if Menu_GetItemHitTest(HostTextID, PointerX#, PointerY#, Menu_TextColorUp, Menu_TextColorDown)
+		Input_MouseUpdate()
+		Pointer = Input_GetMouseCurrentPoition()
+
+		if Menu_GetItemHitTest(HostTextID, Pointer, Menu_TextColorUp, Menu_TextColorDown)
 			Game_IsHost = 1
 			GameState = STATE_GAME
 		endif
 		
-		if Menu_GetItemHitTest(JoinTextID, PointerX#, PointerY#, Menu_TextColorUp, Menu_TextColorDown)
+		if Menu_GetItemHitTest(JoinTextID, Pointer, Menu_TextColorUp, Menu_TextColorDown)
 			Game_IsHost = 0
 			GameState = STATE_JOINGAME
 		endif
 		
-		if Menu_GetItemHitTest(OptionsTextID, PointerX#, PointerY#, Menu_TextColorUp, Menu_TextColorDown)
+		if Menu_GetItemHitTest(OptionsTextID, Pointer, Menu_TextColorUp, Menu_TextColorDown)
 			GameState = STATE_OPTIONS
 		endif
 		
-		if Menu_GetItemHitTest(ExitTextID, PointerX#, PointerY#, Menu_TextColorUp, Menu_TextColorDown)
+		if Menu_GetItemHitTest(ExitTextID, Pointer, Menu_TextColorUp, Menu_TextColorDown)
 			GameState = STATE_EXIT
 		endif
 
@@ -138,8 +144,7 @@ endfunction GameState
 
 function Menu_Options()
 	local GameState as integer
-	local PointerX# as float
-	local PointerY# as float
+	local Pointer as Core_Vec2Data
 	
 	local BackTextID as integer
 	BackTextID = CreateText("Back")
@@ -167,22 +172,22 @@ function Menu_Options()
 	
 	GameState = STATE_OPTIONS
 	while GameState = STATE_OPTIONS
-		PointerX# = ScreenToWorldX(GetPointerX())
-		PointerY# = ScreenToWorldY(GetPointerY())
-		
-		if Menu_GetItemHitTest(BackTextID, PointerX#, PointerY#, Menu_TextColorUp, Menu_TextColorDown)
+		Input_MouseUpdate()
+		Pointer = Input_GetMouseCurrentPoition()
+
+		if Menu_GetItemHitTest(BackTextID, Pointer, Menu_TextColorUp, Menu_TextColorDown)
 			GameState = STATE_MAIN_MENU
 		endif
 		
-		if Menu_GetItemHitTest(GeneralTextID, PointerX#, PointerY#, Menu_TextColorUp, Menu_TextColorDown)
+		if Menu_GetItemHitTest(GeneralTextID, Pointer, Menu_TextColorUp, Menu_TextColorDown)
 			GameState = STATE_OPTION_GENERAL
 		endif
 		
-		if Menu_GetItemHitTest(MultiplayerTextID, PointerX#, PointerY#, Menu_TextColorUp, Menu_TextColorDown)
+		if Menu_GetItemHitTest(MultiplayerTextID, Pointer, Menu_TextColorUp, Menu_TextColorDown)
 			GameState = STATE_OPTION_MULTIPLAYER
 		endif
 		
-		if Menu_GetItemHitTest(KeyBindingsTextID, PointerX#, PointerY#, Menu_TextColorUp, Menu_TextColorDown)
+		if Menu_GetItemHitTest(KeyBindingsTextID, Pointer, Menu_TextColorUp, Menu_TextColorDown)
 			GameState = STATE_OPTION_BINDINGS
 		endif
 
@@ -198,8 +203,7 @@ endfunction GameState
 //TODO: Menu options for the Host and/or Client
 function Menu_Multiplayer()	
 	local GameState as integer
-	local PointerX# as float
-	local PointerY# as float
+	local Pointer as Core_Vec2Data
 	
 	local BackTextID as integer
 	BackTextID = CreateText("Back")
@@ -209,11 +213,10 @@ function Menu_Multiplayer()
 	
 	GameState = STATE_OPTION_MULTIPLAYER
 	while GameState = STATE_OPTION_MULTIPLAYER
-		
-		PointerX# = ScreenToWorldX(GetPointerX())
-		PointerY# = ScreenToWorldY(GetPointerY())
-		
-		if Menu_GetItemHitTest(BackTextID, PointerX#, PointerY#, Menu_TextColorUp, Menu_TextColorDown)
+		Input_MouseUpdate()
+		Pointer = Input_GetMouseCurrentPoition()
+
+		if Menu_GetItemHitTest(BackTextID, Pointer, Menu_TextColorUp, Menu_TextColorDown)
 			GameState = STATE_OPTIONS
 		endif
 		
@@ -224,10 +227,9 @@ function Menu_Multiplayer()
 endfunction GameState
 
 //TODO: General Menu Options for the interface, language etc.
-function Menu_General()	
+function Menu_General()
 	local GameState as integer
-	local PointerX# as float
-	local PointerY# as float
+	local Pointer as Core_Vec2Data
 	
 	local BackTextID as integer
 	BackTextID = CreateText("Back")
@@ -236,12 +238,11 @@ function Menu_General()
 	SetTextPosition(BackTextID, 0, 0)
 	
 	GameState = STATE_OPTION_GENERAL
-	while GameState = STATE_OPTION_GENERAL
-		
-		PointerX# = ScreenToWorldX(GetPointerX())
-		PointerY# = ScreenToWorldY(GetPointerY())
-		
-		if Menu_GetItemHitTest(BackTextID, PointerX#, PointerY#, Menu_TextColorUp, Menu_TextColorDown)
+	while GameState = STATE_OPTION_GENERAL	
+		Input_MouseUpdate()
+		Pointer = Input_GetMouseCurrentPoition()
+
+		if Menu_GetItemHitTest(BackTextID, Pointer, Menu_TextColorUp, Menu_TextColorDown)
 			GameState = STATE_OPTIONS
 		endif
 		
@@ -253,39 +254,176 @@ endfunction GameState
 
 //TODO: Keybinding Options Menu
 function Menu_KeyBindings()
+	Input_Read()
+
 	local GameState as integer
-	
-	local PointerX# as float
-	local PointerY# as float
+	local Pointer as Core_Vec2Data
+	local KeyCode as integer
+
+	local KeyUpName$ as string
+	local KeyDownName$ as string
+	local KeyLeftName$ as string
+	local KeyRightName$ as string
+	local KeyActionName$ as string
+	local KeyReloadName$ as string
+
+	KeyUpName$=Input_GetKeyName(Input_GetPrimaryKeyCode(KEYINDEX_UP))
+	KeyDownName$=Input_GetKeyName(Input_GetPrimaryKeyCode(KEYINDEX_DOWN))
+	KeyLeftName$=Input_GetKeyName(Input_GetPrimaryKeyCode(KEYINDEX_LEFT))
+	KeyRightName$=Input_GetKeyName(Input_GetPrimaryKeyCode(KEYINDEX_RIGHT))
+	KeyActionName$=Input_GetKeyName(Input_GetPrimaryKeyCode(KEYINDEX_ACTION))
+	KeyReloadName$=Input_GetKeyName(Input_GetPrimaryKeyCode(KEYINDEX_RELOAD))
 	
 	local BackTextID as integer
 	BackTextID = CreateText("Back")
 	SetTextSize(BackTextID, 12)
 	FixTextToScreen(BackTextID, 1)
 	SetTextPosition(BackTextID, 0, 0)
+
+	local KeyUpTextID as integer
+	KeyUpTextID=CreateText("Move Forward: ")
+	SetTextSize(KeyUpTextID,4)
+	SetTextPosition(KeyUpTextID,0,12)
 	
+	local KeyUpEditBoxID as integer
+	KeyUpEditBoxID=CreateEditBox()
+	SetEditBoxText(KeyUpEditBoxID,KeyUpName$)
+	SetEditBoxSize(KeyUpEditBoxID,75,6)
+	SetEditBoxPosition(KeyUpEditBoxID,50,12)
+	SetEditBoxBackgroundColor(KeyUpEditBoxID,0,0,0,0)
+	SetEditBoxBorderColor(KeyUpEditBoxID,0,0,0,0)
+	SetEditBoxTextColor(KeyUpEditBoxID,255,255,255)
+	SetEditBoxMaxChars(KeyUpEditBoxID,1)
+	
+	local KeyDownTextID as integer
+	KeyDownTextID=CreateText("Move Bckward: ")
+	SetTextSize(KeyDownTextID,4)
+	SetTextPosition(KeyDownTextID,0,18)
+	
+	local KeyDownEditBoxID as integer
+	KeyDownEditBoxID=CreateEditBox()
+	SetEditBoxText(KeyDownEditBoxID,KeyDownName$)
+	SetEditBoxSize(KeyDownEditBoxID,75,6)
+	SetEditBoxPosition(KeyDownEditBoxID,50,18)
+	SetEditBoxBackgroundColor(KeyDownEditBoxID,0,0,0,0)
+	SetEditBoxBorderColor(KeyDownEditBoxID,0,0,0,0)
+	SetEditBoxTextColor(KeyDownEditBoxID,255,255,255)
+	SetEditBoxMaxChars(KeyDownEditBoxID,1)
+	
+	local KeyLeftTextID as integer
+	KeyLeftTextID=CreateText("Strave Left: ")
+	SetTextSize(KeyLeftTextID,4)
+	SetTextPosition(KeyLeftTextID,0,24)
+	
+	local KeyLeftEditBoxID as integer
+	KeyLeftEditBoxID=CreateEditBox()
+	SetEditBoxText(KeyLeftEditBoxID,KeyLeftName$)
+	SetEditBoxSize(KeyLeftEditBoxID,75,6)
+	SetEditBoxPosition(KeyLeftEditBoxID,50,24)
+	SetEditBoxBackgroundColor(KeyLeftEditBoxID,0,0,0,0)
+	SetEditBoxBorderColor(KeyLeftEditBoxID,0,0,0,0)
+	SetEditBoxTextColor(KeyLeftEditBoxID,255,255,255)
+	SetEditBoxMaxChars(KeyLeftEditBoxID,1)
+	
+	local KeyRightTextID as integer
+	KeyRightTextID=CreateText("Strafe Right: ")
+	SetTextSize(KeyRightTextID,4)
+	SetTextPosition(KeyRightTextID,0,30)
+	
+	local KeyRightEditBoxID as integer
+	KeyRightEditBoxID=CreateEditBox()
+	SetEditBoxText(KeyRightEditBoxID,KeyRightName$)
+	SetEditBoxSize(KeyRightEditBoxID,75,6)
+	SetEditBoxPosition(KeyRightEditBoxID,50,30)
+	SetEditBoxBackgroundColor(KeyRightEditBoxID,0,0,0,0)
+	SetEditBoxBorderColor(KeyRightEditBoxID,0,0,0,0)
+	SetEditBoxTextColor(KeyRightEditBoxID,255,255,255)
+	SetEditBoxMaxChars(KeyRightEditBoxID,1)
+	
+	local KeyActionTextID as integer
+	KeyActionTextID=CreateText("Action: ")
+	SetTextSize(KeyActionTextID,4)
+	SetTextPosition(KeyActionTextID,0,36)
+	
+	local KeyActionEditBoxID as integer
+	KeyActionEditBoxID=CreateEditBox()
+	SetEditBoxText(KeyActionEditBoxID,KeyActionName$)
+	SetEditBoxSize(KeyActionEditBoxID,75,6)
+	SetEditBoxPosition(KeyActionEditBoxID,50,36)
+	SetEditBoxBackgroundColor(KeyActionEditBoxID,0,0,0,0)
+	SetEditBoxBorderColor(KeyActionEditBoxID,0,0,0,0)
+	SetEditBoxTextColor(KeyActionEditBoxID,255,255,255)
+	SetEditBoxMaxChars(KeyActionEditBoxID,1)
+
+	local KeyReloadTextID as integer
+	KeyReloadTextID=CreateText("Reload: ")
+	SetTextSize(KeyReloadTextID,4)
+	SetTextPosition(KeyReloadTextID,0,42)
+	
+	local KeyReloadEditBoxID as integer
+	KeyReloadEditBoxID=CreateEditBox()
+	SetEditBoxText(KeyReloadEditBoxID,KeyReloadName$)
+	SetEditBoxSize(KeyReloadEditBoxID,75,6)
+	SetEditBoxPosition(KeyReloadEditBoxID,50,42)
+	SetEditBoxBackgroundColor(KeyReloadEditBoxID,0,0,0,0)
+	SetEditBoxBorderColor(KeyReloadEditBoxID,0,0,0,0)
+	SetEditBoxTextColor(KeyReloadEditBoxID,255,255,255)
+	SetEditBoxMaxChars(KeyReloadEditBoxID,1)
+
 	GameState = STATE_OPTION_BINDINGS
 	while GameState = STATE_OPTION_BINDINGS
+		Input_MouseUpdate()
+		Pointer = Input_GetMouseCurrentPoition()
 		
-		PointerX# = ScreenToWorldX(GetPointerX())
-		PointerY# = ScreenToWorldY(GetPointerY())
-		
-		if Menu_GetItemHitTest(BackTextID, PointerX#, PointerY#, Menu_TextColorUp, Menu_TextColorDown)
+		if Menu_GetItemHitTest(BackTextID, Pointer, Menu_TextColorUp, Menu_TextColorDown)
 			GameState = STATE_OPTIONS
+		endif
+		
+		KeyCode=Input_GetKeyCodeOnChange()
+
+		if Menu_SetEditboxKey(KeyUpEditBoxID, KeyCode)
+			Input_SetPrimaryKeyBinding(KEYINDEX_UP, KeyCode)
+		endif
+		if Menu_SetEditboxKey(KeyDownEditBoxID, KeyCode)
+			Input_SetPrimaryKeyBinding(KEYINDEX_DOWN, KeyCode)
+		endif
+		if Menu_SetEditboxKey(KeyLeftEditBoxID, KeyCode)
+			Input_SetPrimaryKeyBinding(KEYINDEX_LEFT, KeyCode)
+		endif
+		if Menu_SetEditboxKey(KeyRightEditBoxID, KeyCode)
+			Input_SetPrimaryKeyBinding(KEYINDEX_RIGHT, KeyCode)
+		endif
+		if Menu_SetEditboxKey(KeyActionEditBoxID, KeyCode)
+			Input_SetPrimaryKeyBinding(KEYINDEX_ACTION, KeyCode)
+		endif
+		if Menu_SetEditboxKey(KeyReloadEditBoxID, KeyCode)
+			Input_SetPrimaryKeyBinding(KEYINDEX_RELOAD, KeyCode)
 		endif
 		
 		sync()
 	endwhile
+	Input_Write()
 	
 	DeleteText(BackTextID)
+	DeleteText(KeyUpTextID)
+	DeleteText(KeyDownTextID)
+	DeleteText(KeyLeftTextID)
+	DeleteText(KeyRightTextID)
+	DeleteText(KeyActionTextID)
+	DeleteText(KeyReloadTextID)
+
+	DeleteEditBox(KeyUpEditBoxID)
+	DeleteEditBox(KeyDownEditBoxID)
+	DeleteEditBox(KeyLeftEditBoxID)
+	DeleteEditBox(KeyRightEditBoxID)
+	DeleteEditBox(KeyActionEditBoxID)
+	DeleteEditBox(KeyReloadEditBoxID)
 endfunction GameState
 
 // this function is subject to change
 function Menu_JoinGame()	
 	local GameState as integer
-	
-	local PointerX# as float
-	local PointerY# as float
+	local Pointer as Core_Vec2Data
 	
 	local BackTextID as integer
 	BackTextID = CreateText("Back")
@@ -300,14 +438,14 @@ function Menu_JoinGame()
 	
 	GameState = STATE_JOINGAME
 	while GameState = STATE_JOINGAME
-		PointerX# = ScreenToWorldX(GetPointerX())
-		PointerY# = ScreenToWorldY(GetPointerY())
-		
-		if Menu_GetItemHitTest(BackTextID, PointerX#, PointerY#, Menu_TextColorUp, Menu_TextColorDown)
+		Input_MouseUpdate()
+		Pointer = Input_GetMouseCurrentPoition()
+
+		if Menu_GetItemHitTest(BackTextID, Pointer, Menu_TextColorUp, Menu_TextColorDown)
 			GameState = STATE_MAIN_MENU
 		endif
 		
-		if Menu_GetItemHitTest(ConnectTextID, PointerX#, PointerY#, Menu_TextColorUp, Menu_TextColorDown)
+		if Menu_GetItemHitTest(ConnectTextID, Pointer, Menu_TextColorUp, Menu_TextColorDown)
 			GameState = STATE_GAME
 		endif
 

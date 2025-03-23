@@ -14,6 +14,7 @@ SetSunActive(1)
 SetAmbientColor(155,155,155)
 SetCameraRange(1,1,1000)
 SetClearColor(23,64,128)
+SetSoundDeviceMode(1)
 
 // #include "src/navigation.agc"
 // #include "src/api.agc"
@@ -22,6 +23,7 @@ SetClearColor(23,64,128)
 // #include "src/LoadObject.agc"
 // #include "src/import.agc"
 #include "src/Core.agc"
+#include "src/Sound3D.agc"
 #include "src/Network.agc"
 #include "src/Camera.agc"
 #include "src/Input.agc"
@@ -29,8 +31,10 @@ SetClearColor(23,64,128)
 #include "src/Game.agc"
 
 
-//Init variables
-// runImport()
+// Init variables
+local ReadPath$ as string
+ReadPath$=GetReadPath()
+Input_Init(9, 3, 300, ReadPath$+"media/settings/keybindings.ini")
 
 Menu_Init()
 end
